@@ -100,7 +100,7 @@ axios.interceptors.response.use((response) => {
   }
   return Promise.reject(err)
 })
-axios.install = (Vue) => {
+axios.install = (Vue: any) => {
   Vue.prototype.$axios = axios
 }
 export default axios

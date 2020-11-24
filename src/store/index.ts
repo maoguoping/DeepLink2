@@ -5,9 +5,11 @@ export interface State {
   platform: PlatformStore,
   headerBar: HeaderBarStore
 }
-export default createStore({
-  state: {
-  },
+export interface Store {
+  platform: PlatformStore,
+  headerBar: HeaderBarStore
+}
+const store = createStore({
   mutations: {
   },
   actions: {
@@ -17,3 +19,4 @@ export default createStore({
     headerBar: headerBar
   }
 })
+export default store
