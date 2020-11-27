@@ -40,14 +40,13 @@
         <SetElementInfoDialog
           v-model:value="showSetElementInfoDialog"
           :data="listInfo"
-          @close="showSetElementInfoDialog = false"
         ></SetElementInfoDialog>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
-import SetElementInfoDialog from '@/components/dialog/setElementInfoDialog'
+import SetElementInfoDialog from '../components/dialog/setElementInfoDialog'
 export default {
   name: 'Element',
   data () {

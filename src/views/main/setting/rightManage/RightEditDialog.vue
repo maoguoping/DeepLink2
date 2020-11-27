@@ -109,22 +109,23 @@ export default {
      * @return {Void}
      */
     handleClose () {
-      this.$emit('close')
+      this.$emit('update:value', false)
     },
     /**
      * 保存窗口数据
      * @param {function} 回调函数
      * @return {Void}
      */
-    saveFun () {
+    async saveFun () {
       const { rightName, rightId } = this.rightInfo
       if (rightName === '') {
         message.warning('权限名不能为空！')
       } else {
-        $axios.post($api.setting.checkRightExist, {
-          rightInfo: JSON.stringify({ rightName, rightId }),
-          type: this.type
-        }).then(res => {
+        try {
+          const res = await $axios.post($api.setting.checkRightExist, {
+            rightInfo: JSON.stringify({ rightName, rightId }),
+            type: this.type
+          })
           if (res.list.length > 0 && this.type === 'add') {
             message.warning('权限以及权限id不可重复！')
           } else {
@@ -135,43 +136,43 @@ export default {
               this.updateRight()
             }
           }
-        }).catch(e => {
-          console.log(e)
-        })
+        } catch (err) {
+          message.error(' 保存窗口数据失败！')
+        }
       }
     },
     /**
      * 新增权限
      * @return {Void}
      */
-    addRight () {
-      $axios.post($api.setting.addRight, {
-        rightInfo: JSON.stringify(this.rightInfo),
-        addRoleIds: this.ownRoleList.join(',')
-      }).then(res => {
+    async addRight () {
+      try {
+        await $axios.post($api.setting.addRight, {
+          rightInfo: JSON.stringify(this.rightInfo),
+          addRoleIds: this.ownRoleList.join(',')
+        })
         this.$emit('update', this.type)
-      }).catch(e => {
+      } catch (err) {
         message.error('新增权限角色失败')
-        console.log(e)
-      })
+      }
     },
     /**
      * 修改权限
      * @return {Void}
      */
-    updateRight () {
+    async updateRight () {
       const { preview, after } = this.getArrDifference(this.rightInfo.roleIds, this.ownRoleList)
       const { rightId } = this.rightInfo
-      $axios.post($api.setting.changeRoleRight, {
-        rightId: rightId,
-        addRoleIds: after.join(','),
-        deleteRoleIds: preview.join(',')
-      }).then(res => {
+      try {
+        await $axios.post($api.setting.changeRoleRight, {
+          rightId: rightId,
+          addRoleIds: after.join(','),
+          deleteRoleIds: preview.join(',')
+        })
         this.$emit('update', this.type)
-      }).catch(e => {
+      } catch (err) {
         message.error('修改权限角色失败')
-        console.log(e)
-      })
+      }
     },
     /**
      * 用户名更改回调
@@ -216,23 +217,23 @@ export default {
      * 获取拥有权限的角色
      * @return {void}
      */
-    getRoleByRight () {
+    async getRoleByRight () {
       setTimeout(() => {
         this.dialogVisible = true
       }, 300)
-      $axios.post($api.setting.getRoleByRight, {
-        rightId: this.rightInfo.rightId
-      }).then(res => {
+      try {
+        const res = await $axios.post($api.setting.getRoleByRight, {
+          rightId: this.rightInfo.rightId
+        })
         let roleIds = []
         if (res.list.length > 0) {
           roleIds = res.list.map(i => i.roleId)
         }
         this.ownRoleList = roleIds
         this.rightInfo.roleIds = roleIds
-      }).catch(e => {
-        console.error(e)
+      } catch (err) {
         message.error('加载拥有权限的角色失败')
-      })
+      }
     },
     getArrDifference (arr1, arr2) {
       let arr1Change = []
@@ -250,7 +251,7 @@ export default {
     }
   },
   async mounted () {
-    await this.getRoleListDic()
+    // await this.getRoleListDic()
   },
   watch: {
     async value (newVal) {

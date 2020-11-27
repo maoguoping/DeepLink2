@@ -1,51 +1,27 @@
 <template>
-  <div class="setModuleDialog">
+  <div class="setElementInfoDialog">
     <a-modal
-      :title="data.type=='add'?'新建模块':'编辑模块'"
+      title="编辑信息"
       v-model:visible="dialogVisible"
       width="30%"
       :before-close="handleClose">
-      <a-form :model="setModuleForm" :rules="rules" ref="setModuleForm">
-        <a-form-item label="模块类型" name="moduleType" v-show="data.type == 'add'">
+      <a-form :model="setElementInfoForm" :rules="rules" ref="setElementInfoForm">
+        <a-form-item label="模块介绍" name="elementDescription">
           <br>
-          <a-radio-group v-model:value="setModuleForm.moduleType">
-            <a-radio label="0">文件夹</a-radio>
-            <a-radio label="1">元素</a-radio>
-          </a-radio-group>
+          <el-tag :key="tag" v-for="tag in dynamicTags" closable :disable-transitions="false"
+                  @close="handleCloseTag(tag)">
+            {{tag}}
+          </el-tag>
+          <a-input class="input-new-tag" v-if="inputVisible" v-model:value="inputValue" ref="saveTagInput" size="small"
+                    @keyup.enter="handleInputConfirm" @blur="handleInputConfirm"></a-input>
+          <a-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</a-button>
         </a-form-item>
-        <a-form-item label="模块名称" name="name">
-          <a-input auto-complete="off" maxlength="20" v-model:value="setModuleForm.name"></a-input>
-        </a-form-item>
-        <a-form-item label="文件夹类型" name="typeId" v-if="setModuleForm.moduleType == '0'">
-          <br>
-          <a-select v-model:value="setModuleForm.typeId">
-            <a-select-option
-              v-for="item in folderTypeList"
-              :key="item.id"
-              :title="item.name"
-              :value="item.id">
-              {{item.name}}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="元素类型" name="typeId" v-if="setModuleForm.moduleType === '1'">
-          <br>
-          <a-select v-model:value="setModuleForm.typeId">
-            <a-select-option
-              v-for="item in elementTypeList"
-              :key="item.id"
-              :title="item.name"
-              :value="item.id">
-              {{item.name}}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="模块介绍" name="description">
+        <a-form-item label="模块介绍" name="elementDescription">
           <a-textarea
             type="textarea"
             :rows="2"
             placeholder="请输入内容"
-            v-model:value="setModuleForm.description"
+            v-model:value="setElementInfoForm.elementDescription"
             :maxlength="200"
           >
           </a-textarea>
@@ -83,29 +59,25 @@ export default {
   data () {
     return {
       dialogVisible: false, // 弹窗显示隐藏
-      setModuleForm: {
-        id: '', // 模块id
-        name: '', // 模块名称
-        oldName: '', // 模块原名称
-        typeId: '', // 模块类型id
-        moduleType: '0', // 模块类型(0：文件夹；1：元素)
-        description: '' // 模块描述
+      setElementInfoForm: {
+        elementId: '', // 模块id
+        elementName: '', // 模块名称
+        elementDescription: '' // 模块描述
       },
       rules: {
-        name: [
-          { required: true, message: '请输入模块名称', trigger: 'blur' },
-          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
-        ],
-        description: [
+        elementDescription: [
           { required: false },
           { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
         ],
-        typeId: [
+        moduleTypeId: [
           { required: true, message: '必须选择分类', trigger: 'blur' }
         ]
       },
       folderTypeList: [],
-      elementTypeList: []
+      elementTypeList: [],
+      dynamicTags: ['标签一', '标签二', '标签三'],
+      inputVisible: false,
+      inputValue: ''
     }
   },
   computed: {
@@ -120,8 +92,27 @@ export default {
        * @return {void}
        */
     handleClose (done) {
-      this.$refs.setModuleForm.resetFields()
-      this.$emit('close')
+      this.$refs.setElementInfoForm.resetFields()
+      this.$emit('update:value', false)
+    },
+    handleCloseTag (tag) {
+      this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
+    },
+
+    showInput () {
+      this.inputVisible = true
+      this.$nextTick(_ => {
+        this.$refs.saveTagInput.$refs.input.focus()
+      })
+    },
+
+    handleInputConfirm () {
+      const inputValue = this.inputValue
+      if (inputValue) {
+        this.dynamicTags.push(inputValue)
+      }
+      this.inputVisible = false
+      this.inputValue = ''
     },
     /**
        * 提交表单
@@ -137,8 +128,8 @@ export default {
           parentType: this.listInfo.type,
           parentTypeId: this.listInfo.typeId
         }
-        Object.assign(params, this.setModuleForm)
-        this.$refs.setModuleForm.validate((valid) => {
+        Object.assign(params, this.setElementInfoForm)
+        this.$refs.setElementInfoForm.validate((valid) => {
           if (valid) {
             $axios.post($api.manageCenter.addModule, {
               info: JSON.stringify(params)
@@ -150,7 +141,7 @@ export default {
           }
         })
       } else if (this.data.type === 'edit') {
-        this.$refs.setModuleForm.validate((valid) => {
+        this.$refs.setElementInfoForm.validate((valid) => {
           if (valid) {
             const params = {
               parentId: this.listInfo.id,
@@ -160,7 +151,7 @@ export default {
               parentType: this.listInfo.type,
               parentTypeId: this.listInfo.typeId
             }
-            Object.assign(params, this.setModuleForm)
+            Object.assign(params, this.setElementInfoForm)
             $axios.post($api.manageCenter.updateModule, {
               info: JSON.stringify(params)
             }).then(res => {
@@ -199,12 +190,12 @@ export default {
       this.dialogVisible = newVal
     },
     data (newVal) {
-      this.setModuleForm = {
-        id: newVal.id,
-        name: newVal.name,
-        oldName: newVal.name,
-        description: newVal.description,
-        typeId: newVal.typeId,
+      this.setElementInfoForm = {
+        elementId: newVal.id,
+        elementName: newVal.name,
+        oldelementName: newVal.name,
+        elementDescription: newVal.description,
+        moduleTypeId: newVal.typeId,
         moduleType: newVal.moduleType || '0'
       }
     }
@@ -213,4 +204,27 @@ export default {
 </script>
 
 <style lang="scss" scoped type="text/scss">
+  .el-tag + .el-tag {
+    margin-left: 10px;
+  }
+
+  .button-new-tag {
+    margin-left: 10px;
+    height: 32px;
+    line-height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .input-new-tag {
+    width: 90px;
+    margin-left: 10px;
+    vertical-align: bottom;
+  }
+
+  .description-text {
+    width: 100%;
+    font-size: 12px;
+    text-indent: 2em;
+  }
 </style>

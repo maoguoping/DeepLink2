@@ -71,7 +71,7 @@ export default {
   methods: {
     handleClose (done) {
       this.$refs.setProjectForm.resetFields()
-      this.$emit('close')
+      this.$emit('update:value', false)
     },
     handleSubmit () {
       if (this.data.type === 'add') {

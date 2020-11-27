@@ -194,8 +194,8 @@ export default {
 //            if(to.query.path!=this.docData.path){
 //                next(false);
 //                Modal.confirm('编辑尚未提交，确定离开?', '提示', {
-//                    confirmButtonText: '确定',
-//                    cancelButtonText: '取消',
+//                    okText: '确定',
+//                    cancelText: '取消',
 //                    type: 'warning'
 //                }).then(() => {
 //                    // 选择确定

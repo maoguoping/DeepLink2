@@ -77,13 +77,15 @@ export default {
     /**
      * 登录
      */
-    const login = () => {
+    const login = async () => {
       console.log(internalInstance)
-      internalInstance.refs.loginForm.validate().then(valid => {
-        valid && $axios.post($api.users.login, {
-          username: form.account,
-          password: md5(form.password)
-        }).then(res => {
+      try {
+        const valid = await internalInstance.refs.loginForm.validate()
+        if (valid) {
+          const res = await $axios.post($api.users.login, {
+            username: form.account,
+            password: md5(form.password)
+          })
           // 将用户信息放入localStorage
           localStorage.setItem('username', res.username)
           localStorage.setItem('token', res.token)
@@ -93,10 +95,10 @@ export default {
           router.push({
             path: '/'
           })
-        }).catch(err => {
-          message.error(err.message || '错误')
-        })
-      })
+        }
+      } catch (err) {
+        message.error(err.message || '错误')
+      }
     }
     /**
      * 切换到注册

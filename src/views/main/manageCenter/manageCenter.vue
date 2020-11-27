@@ -35,11 +35,11 @@
             </div>
             <Element v-if="isElement"></Element>
         </a-layout-content>
-        <SetProjectDialog v-model:value="showSetProjectDialog" :data="setProjectDialogData" @close="handlesetProjectDialogClose" @success="handleAddProjectSuccess"></SetProjectDialog>
-        <SetModuleDialog v-model:value="showSetModuleDialog" :data="setModuleDialogData" @close="handleSetModuleDialogClose" @success="handleSetModuleSuccess"></SetModuleDialog>
-        <ListInfoDialog v-if="!isMainList" v-model:value="showListInfoDialog" @close="showListInfoDialog=false"></ListInfoDialog>
+        <SetProjectDialog v-model:value="showSetProjectDialog" :data="setProjectDialogData" @success="handleAddProjectSuccess"></SetProjectDialog>
+        <SetModuleDialog v-model:value="showSetModuleDialog" :data="setModuleDialogData" @success="handleSetModuleSuccess"></SetModuleDialog>
+        <ListInfoDialog v-if="!isMainList" v-model:value="showListInfoDialog"></ListInfoDialog>
         <!-- <DocEditDialog v-model:value="showDocEditDialog" :data="editData"></DocEditDialog> -->
-        <ShareQRCodeDialog v-model:value="showShareTip" :url="currentUrl" @close="showShareTip=false"></ShareQRCodeDialog>
+        <ShareQRCodeDialog v-model:value="showShareTip" :url="currentUrl"></ShareQRCodeDialog>
     </a-layout>
 </template>
 <script>
@@ -50,16 +50,21 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import Utils from '@/lib/utils.js'
 import PathBar from '@/components/bar/PathBar.vue'
-import ListView from '@/components/view/ListView.vue'
+import ListView from './components/view/ListView.vue'
 import Element from './element/Element.vue'
-// import DocEditDialog from '@/components/dialog/docEditDialog.vue'
-import SetProjectDialog from '@/components/dialog/setProjectDialog.vue'
-import SetModuleDialog from '@/components/dialog/setModuleDialog.vue'
-import ListInfoDialog from '@/components/dialog/listInfoDialog.vue'
-import ShareQRCodeDialog from '@/components/dialog/shareQRCodeDialog'
+// import DocEditDialog from './components/dialog/docEditDialog.vue'
+import SetProjectDialog from './components/dialog/setProjectDialog.vue'
+import SetModuleDialog from './components/dialog/setModuleDialog.vue'
+import ListInfoDialog from './components/dialog/listInfoDialog.vue'
+import ShareQRCodeDialog from './components/dialog/shareQRCodeDialog'
 export default {
   name: 'manage-center',
+  setup () {
+    console.log('setup')
+    return {}
+  },
   data () {
+    console.log('data')
     return {
       docId: '1519187825477',
       currentItem: {},
@@ -238,29 +243,24 @@ export default {
      * @return {void}
      */
     handleDelete (item) {
-      Modal.confirm('确定删除?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        if (this.isMainList) {
-          $axios.post($api.manageCenter.deleteProject, {
-            info: JSON.stringify({
-              id: [item.id]
+      Modal.confirm({
+        title: '提示',
+        content: '确定删除?',
+        okText: '确定',
+        cancelText: '取消',
+        onOk: async () => {
+          try {
+            const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
+            await $axios.post(api, {
+              info: JSON.stringify({
+                id: [item.id]
+              })
             })
-          }).then(res => {
             message.success('删除成功')
             this.$refs[this.viewType].updateView()
-          })
-        } else {
-          $axios.post($api.manageCenter.deleteModule, {
-            info: JSON.stringify({
-              id: [item.id]
-            })
-          }).then(res => {
-            message.success('删除成功')
-            this.$refs[this.viewType].updateView()
-          })
+          } catch (err) {
+            message.error('删除失败')
+          }
         }
       })
     },
@@ -280,26 +280,18 @@ export default {
           content: '确定删除?',
           okText: '确定',
           cancelText: '取消',
-          okType: 'warning',
-          onOK: () => {
-            if (this.isMainList) {
-              $axios.post($api.manageCenter.deleteProject, {
+          onOK: async () => {
+            try {
+              const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
+              await $axios.post(api, {
                 info: JSON.stringify({
                   id: list
                 })
-              }).then(res => {
-                message.success('删除成功')
-                this.$refs[this.viewType].updateView()
               })
-            } else {
-              $axios.post($api.manageCenter.deleteModule, {
-                info: JSON.stringify({
-                  id: list
-                })
-              }).then(res => {
-                message.success('删除成功')
-                this.$refs[this.viewType].updateView()
-              })
+              message.success('删除成功')
+              this.$refs[this.viewType].updateView()
+            } catch (err) {
+              message.error('删除失败')
             }
           }
         })
@@ -313,25 +305,11 @@ export default {
       this.showListInfoDialog = true
     },
     /**
-           * 关闭项目新增编辑弹窗
-           * @return {void}
-           */
-    handlesetProjectDialogClose () {
-      this.showSetProjectDialog = false
-    },
-    /**
            * 添加项目成功回调
            * @return {void}
            */
     handleAddProjectSuccess () {
       this.$refs[this.viewType].updateView()
-    },
-    /**
-           * 关闭模块新增编辑弹窗
-           * @return {void}
-           */
-    handleSetModuleDialogClose () {
-      this.showSetModuleDialog = false
     },
     /**
            * 设置项目成功回调
@@ -341,9 +319,9 @@ export default {
       this.$refs[this.viewType].updateView()
     },
     /**
-           * 分享按钮回调
-           * @return {void}
-           */
+     * 分享按钮回调
+     * @return {void}
+     */
     handleShareBtn () {
       this.currentUrl = decodeURI(window.location.href)
       this.showShareTip = true
@@ -375,8 +353,8 @@ export default {
     // 可以访问组件实例 `this`;
     if (this.isDocEdit) {
       Modal.confirm('确定离开?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        okText: '确定',
+        cancelText: '取消',
         type: 'warning'
       }).then(() => {
         // 选择确定

@@ -62,6 +62,7 @@ import Utils from '@/lib/utils.js'
 import { mapState, mapMutations } from 'vuex'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+import { message } from 'ant-design-vue'
 
 export default {
   name: 'list-view',
@@ -228,10 +229,10 @@ export default {
      *加载表格
      * @return {void}
      */
-    loadViewData () {
+    async loadViewData () {
       const pathId = this.pathId || ''
-      $axios
-        .post($api.manageCenter.getViewDataByPathId, {
+      try {
+        const res = await $axios.post($api.manageCenter.getViewDataByPathId, {
           pathId: pathId,
           pageInfo: JSON.stringify({
             currentPage: this.page.currentPage,
@@ -240,22 +241,23 @@ export default {
             order: this.order
           })
         })
-        .then(res => {
-          const result = res.data.list.map(item => {
-            item.modifyTime = Utils.timeFormat(new Date(item.modifyTime), 'yyyy-MM-dd')
-            item.tags = item.tag.split(',')
-            item.children = []
-            return item
-          })
-          console.log(result)
-          this.page.total = res.data.total
-          this.viewData = result
-          this.$emit('on-change', {
-            type: 'update',
-            viewType: 'listView',
-            viewDescription: res.data.listDescription
-          })
+        const result = res.data.list.map(item => {
+          item.modifyTime = Utils.timeFormat(new Date(item.modifyTime), 'yyyy-MM-dd')
+          item.tags = item.tag.split(',')
+          item.children = []
+          return item
         })
+        console.log(result)
+        this.page.total = res.data.total
+        this.viewData = result
+        this.$emit('on-change', {
+          type: 'update',
+          viewType: 'listView',
+          viewDescription: res.data.listDescription
+        })
+      } catch (err) {
+        message.error('加载数据错误')
+      }
     },
     /**
      * 表格行class生成

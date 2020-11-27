@@ -67,8 +67,7 @@ export default {
   },
   methods: {
     handleClose (done) {
-      this.$emit('close')
-      done()
+      this.$emit('update:value', false)
     }
   },
   watch: {

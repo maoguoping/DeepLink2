@@ -69,14 +69,16 @@ export default {
     /**
        * 提交注册信息
        */
-    const register = () => {
-      internalInstance.refs.registerForm.validate().then(valid => {
-        valid && $axios.post($api.users.register, {
-          username: this.form.account,
-          password: md5(this.form.password),
-          passwordQes: this.form.passwordQes,
-          passwordAns: md5(this.form.passwordAns)
-        }).then(res => {
+    const register = async () => {
+      try {
+        const valid = await internalInstance.refs.registerForm.validate()
+        if (valid) {
+          const res = await $axios.post($api.users.register, {
+            username: this.form.account,
+            password: md5(this.form.password),
+            passwordQes: this.form.passwordQes,
+            passwordAns: md5(this.form.passwordAns)
+          })
           if (res.registerSuccess) {
             message.success(res.message)
             console.log('register方法')
@@ -84,10 +86,10 @@ export default {
           } else {
             message.warning(res.message)
           }
-        }).catch(err => {
-          message.error(err.message)
-        })
-      })
+        }
+      } catch (err) {
+        message.error(err.message)
+      }
     }
     /**
        * 密码确认校验

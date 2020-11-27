@@ -125,7 +125,7 @@
       ></a-pagination>
     </div>
     <UserEditDialog v-model:value="showUserEditDialog" :data="editUserInfo" :type="userEditDialogType"
-                    @close="showUserEditDialog =false" @update="handleEditUpdate"></UserEditDialog>
+     @update="handleEditUpdate"></UserEditDialog>
   </div>
 </template>
 
@@ -135,8 +135,17 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
+import { message } from 'ant-design-vue'
+import { useRoleListDic } from '../hooks'
 export default {
   name: 'userManage',
+  setup () {
+    console.log('setup')
+    const { roleList } = useRoleListDic()
+    return {
+      roleList
+    }
+  },
   data () {
     const page = {
       currentPage: 1,
@@ -146,7 +155,7 @@ export default {
     }
     return {
       page,
-      roleList: [], // 角色列表
+      // roleList: [], // 角色列表
       breadcrumbList: [
         {
           label: '用户设置',
@@ -226,22 +235,10 @@ export default {
   },
   methods: {
     /**
-       * 加载角色下拉列表
-       * @return {void}
-       */
-    getRoleListDic () {
-      console.log('roel')
-      $axios.get($api.api.getRoleListDic, {}).then(res => {
-        this.roleList = res.data
-      }).catch(e => {
-        console.log(e)
-      })
-    },
-    /**
        * 加载列表数据
        * @return {void}
        */
-    load () {
+    async load () {
       console.log('load')
       const { username, userId, userTickName, roleId, createTime, lastLoginTime } = this.form
       const { currentPage, pageSize } = this.page
@@ -264,20 +261,21 @@ export default {
           }
         })
       }
-      $axios.post($api.setting.getUserList, {
-        searchData: JSON.stringify({
-          username,
-          userId,
-          userTickName,
-          roleId: roleId ? roleId.join(',') : '',
-          createTime: createTimeList ? createTimeList.join(',') : '',
-          lastLoginTime: loginTimeList ? loginTimeList.join(',') : '',
-          orderName: this.sortCol,
-          orderType: this.sortOrder,
-          index: currentPage,
-          pageSize
+      try {
+        const res = await $axios.post($api.setting.getUserList, {
+          searchData: JSON.stringify({
+            username,
+            userId,
+            userTickName,
+            roleId: roleId ? roleId.join(',') : '',
+            createTime: createTimeList ? createTimeList.join(',') : '',
+            lastLoginTime: loginTimeList ? loginTimeList.join(',') : '',
+            orderName: this.sortCol,
+            orderType: this.sortOrder,
+            index: currentPage,
+            pageSize
+          })
         })
-      }).then(res => {
         const result = res.data.userList.map(item => {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss')
           item.lastLoginTime = Utils.timeFormat(new Date(item.lastLoginTime), 'yyyy-MM-dd hh:mm:ss')
@@ -286,9 +284,9 @@ export default {
         console.log(result)
         this.userListData = result
         this.page.total = res.data.total
-      }).catch(e => {
-        console.log(e)
-      })
+      } catch (err) {
+        message.error('加载用户列表失败')
+      }
     },
     /**
        * 搜索按钮回调
@@ -360,7 +358,7 @@ export default {
     }
   },
   mounted () {
-    this.getRoleListDic()
+    console.log('option mount')
     this.load()
   },
   components: {

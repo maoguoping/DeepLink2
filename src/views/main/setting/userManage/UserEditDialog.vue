@@ -78,6 +78,7 @@ import UploadUtil from '@/lib/upload'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
+import { useRoleListDic } from '../hooks'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -100,7 +101,12 @@ export default {
       }
     }
   },
-
+  setup () {
+    const { roleList } = useRoleListDic()
+    return {
+      roleList
+    }
+  },
   data () {
     return {
       dialogVisible: false,
@@ -108,7 +114,6 @@ export default {
       tickNameBlockStatus: 0,
       userInfo: this.data,
       imageUrl: '',
-      roleList: [],
       $api
     }
   },
@@ -120,26 +125,27 @@ export default {
        * @return {Void}
        */
     handleClose () {
-      this.$emit('close')
+      this.$emit('update:value', false)
     },
     /**
        * 保存窗口数据
        * @param {function} 回调函数
        * @return {Void}
        */
-    saveFun () {
+    async saveFun () {
       const { userId, username, userTickName, roleId } = this.userInfo
       if (username === '') {
         message.warning('用户名不能为空！')
       } else if (userTickName === '') {
         message.warning('用户昵称不能为空！')
       } else {
-        $axios.post($api.setting.saveUserInfo, { userInfo: JSON.stringify({ userId, username, userTickName, roleId }) }).then(res => {
-          message.success('修改用户信息成功！')
+        try {
+          await $axios.post($api.setting.saveUserInfo, { userInfo: JSON.stringify({ userId, username, userTickName, roleId }) })
+          message.success('修改用户信息成功')
           this.$emit('update')
-        }).catch(e => {
-          console.log(e)
-        })
+        } catch (err) {
+          message.error('修改用户信息失败！')
+        }
       }
     },
     /**
@@ -165,18 +171,6 @@ export default {
        */
     changeRole (roleId) {
       this.userInfo.roleId = roleId
-    },
-    /**
-       * 加载角色下拉列表
-       * @return {void}
-       */
-    getRoleListDic () {
-      $axios.get($api.api.getRoleListDic, {}).then(res => {
-        this.roleList = res.data
-        console.log(this.roleList)
-      }).catch(e => {
-        console.log(e)
-      })
     },
     handleAvatarSuccess (res, file) {
       this.imageUrl = URL.createObjectURL(file)
@@ -229,9 +223,6 @@ export default {
     httprequest () {
 
     }
-  },
-  mounted () {
-    this.getRoleListDic()
   },
   watch: {
     value (newVal) {

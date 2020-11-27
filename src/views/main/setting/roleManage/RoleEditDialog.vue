@@ -75,7 +75,7 @@ export default {
        * @return {Void}
        */
     handleClose () {
-      this.$emit('close')
+      this.$emit('update:value', false)
     },
     /**
        * 保存窗口数据
@@ -111,27 +111,29 @@ export default {
      * 新增角色
      * @return {Void}
      */
-    addRole () {
-      $axios.post($api.setting.addRole, {
-        roleInfo: JSON.stringify(this.roleInfo)
-      }).then(res => {
+    async addRole () {
+      try {
+        await $axios.post($api.setting.addRole, {
+          roleInfo: JSON.stringify(this.roleInfo)
+        })
         this.$this.$emit('update', this.type)
-      }).catch(e => {
-        console.log(e)
-      })
+      } catch (err) {
+        message.error('新增角色失败！')
+      }
     },
     /**
      * 修改角色
      * @return {Void}
      */
-    updateRole () {
-      $axios.post($api.setting.updateRole, {
-        roleInfo: JSON.stringify(this.roleInfo)
-      }).then(res => {
+    async updateRole () {
+      try {
+        await $axios.post($api.setting.updateRole, {
+          roleInfo: JSON.stringify(this.roleInfo)
+        })
         this.$this.$emit('update', this.type)
-      }).catch(e => {
-        console.log(e)
-      })
+      } catch (err) {
+        message.error('修改角色失败！')
+      }
     },
     /**
        * 用户名更改回调
@@ -156,22 +158,7 @@ export default {
        */
     changeRole (roleId) {
       this.userInfo.roleId = roleId
-    },
-    /**
-       * 加载角色下拉列表
-       * @return {void}
-       */
-    getRoleListDic () {
-      $axios.get($api.api.getRoleListDic, {}).then(res => {
-        this.roleList = res.data
-        console.log(this.roleList)
-      }).catch(e => {
-        console.log(e)
-      })
     }
-  },
-  mounted () {
-    this.getRoleListDic()
   },
   watch: {
     value (newVal) {

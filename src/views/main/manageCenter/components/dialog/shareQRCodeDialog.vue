@@ -1,18 +1,18 @@
 <template>
-        <a-modal
-          title="二维码分享"
-          v-model:visible="dialogVisible"
-          width="230px"
-          okText="确定"
-          cancelText="关闭"
-          @ok="handleClose"
-          @close="handleClose"
-          class="shareQRCodeDialog"
-        >
-          <div class="svg-box" style="">
-            <div class="svg-pic" v-html="svg"></div>
-          </div>
-        </a-modal>
+  <a-modal
+    title="二维码分享"
+    v-model:visible="dialogVisible"
+    width="230px"
+    okText="确定"
+    cancelText="关闭"
+    @ok="handleClose"
+    @close="handleClose"
+    class="shareQRCodeDialog"
+  >
+    <div class="svg-box" style="">
+      <div class="svg-pic" v-html="svg"></div>
+    </div>
+  </a-modal>
 </template>
 <script>
 import $axios from '@/lib/axios'
@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     handleClose () {
-      this.$emit('close')
+      this.$emit('update:value', false)
     }
   },
   watch: {

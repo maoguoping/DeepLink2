@@ -68,7 +68,6 @@
       v-model:value="showRoleEditDialog"
       :type="roleEditDialogType"
       :data="editRoleInfo"
-      @close="showRoleEditDialog=false"
       @update="editConfirm"
     ></RoleEditDialog>
   </div>
@@ -151,7 +150,7 @@ export default {
      * 加载列表数据
      * @return {void}
      */
-    load () {
+    async load () {
       const { roleName, roleId, createTime } = this.form
       const { currentPage, pageSize } = this.page
       const createTimeList = []
@@ -163,8 +162,8 @@ export default {
           }
         })
       }
-      $axios
-        .post($api.setting.getRoleList, {
+      try {
+        const res = await $axios.post($api.setting.getRoleList, {
           searchData: JSON.stringify({
             roleId,
             roleName,
@@ -175,17 +174,15 @@ export default {
             pageSize
           })
         })
-        .then(res => {
-          const result = res.data.list.map(item => {
-            item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
-            return item
-          })
-          this.roleList = result
-          this.page.total = res.data.total
+        const result = res.data.list.map(item => {
+          item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
+          return item
         })
-        .catch(e => {
-          console.log(e)
-        })
+        this.roleList = result
+        this.page.total = res.data.total
+      } catch (err) {
+        message.error('加载列表数据失败！')
+      }
     },
     /**
      * 搜索按钮回调

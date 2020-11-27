@@ -74,7 +74,6 @@
       v-model:value="showRightEditDialog"
       :type="rightEditDialogType"
       :data="editRightInfo"
-      @close="showRightEditDialog=false"
       @update="editConfirm"
     ></RightEditDialog>
   </div>
@@ -170,7 +169,7 @@ export default {
      * 加载列表数据
      * @return {void}
      */
-    load () {
+    async load () {
       const { rightName, rightId, createTime } = this.form
       const { currentPage, pageSize } = this.page
       const createTimeList = []
@@ -183,8 +182,8 @@ export default {
         })
       }
       console.log('请求接口')
-      $axios
-        .post($api.setting.getRightList, {
+      try {
+        const res = await $axios.post($api.setting.getRightList, {
           searchData: JSON.stringify({
             rightId: rightId,
             rightName: rightName,
@@ -195,18 +194,16 @@ export default {
             pageSize
           })
         })
-        .then(res => {
-          const result = res.data.list.map(item => {
-            item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
-            return item
-          })
-          this.rightList = result
-          this.page.total = res.data.total
-          this.selectList = []
+        const result = res.data.list.map(item => {
+          item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
+          return item
         })
-        .catch(e => {
-          console.log(e)
-        })
+        this.rightList = result
+        this.page.total = res.data.total
+        this.selectList = []
+      } catch (err) {
+        message.error(' 加载列表数据失败！')
+      }
     },
     /**
      * 搜索按钮回调
@@ -290,26 +287,23 @@ export default {
      * 删除权限回调
      * @return {void}
      */
-    handleDelRight () {
+    async handleDelRight () {
       if (this.selectList.length === 0) {
         message.warning('请选择权限')
         return
       }
       const ids = this.selectList.map(i => i.rightId)
-      $axios
-        .post($api.setting.deleteRight, {
+      try {
+        await $axios.post($api.setting.deleteRight, {
           rightInfo: JSON.stringify({
             rightId: ids.join(',')
           })
         })
-        .then(res => {
-          message.success('删除权限成功')
-          this.load()
-        })
-        .catch(e => {
-          message.error('删除权限失败')
-          console.log(e)
-        })
+        message.success('删除权限成功')
+        this.load()
+      } catch (err) {
+        message.error('删除权限失败')
+      }
     },
     /**
      * 弹窗确定回调
