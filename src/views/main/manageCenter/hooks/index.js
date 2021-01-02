@@ -21,3 +21,33 @@ export const useRoleListDic = function () {
     getRoleListDic
   }
 }
+export const useElementTypeDic = function () {
+  const elementTypeList = ref([])
+  const getElementTypeDic = async () => {
+    try {
+      const res = await $axios.get($api.api.getElementTypeDic, {})
+      elementTypeList.value = res.data
+    } catch (err) {
+      message.error('加载元素类别列表失败')
+    }
+  }
+  return {
+    elementTypeList,
+    getElementTypeDic
+  }
+}
+export const useFolderTypeDic = function () {
+  const folderTypeList = ref([])
+  const getFolderTypeDic = async () => {
+    try {
+      const res = await $axios.get($api.api.getFolderTypeDic, {})
+      folderTypeList.value = res.data
+    } catch (err) {
+      message.error('加载目录类别列表失败')
+    }
+  }
+  return {
+    folderTypeList,
+    getFolderTypeDic
+  }
+}

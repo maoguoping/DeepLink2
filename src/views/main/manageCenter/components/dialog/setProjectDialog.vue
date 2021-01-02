@@ -7,7 +7,7 @@
           :before-close="handleClose">
           <a-form :model="setProjectForm" :rules="rules" ref="setProjectForm">
             <a-form-item label="项目名称" name="name">
-              <a-input  auto-complete="off" maxlength="20" v-model:value="setProjectForm.name"></a-input>
+              <a-input  auto-complete="off" :maxlength="20" v-model:value="setProjectForm.name"></a-input>
             </a-form-item>
             <a-form-item label="项目介绍" name="description">
               <a-textarea

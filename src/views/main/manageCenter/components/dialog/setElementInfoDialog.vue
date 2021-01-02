@@ -41,6 +41,8 @@ import { mapState } from 'vuex'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+import { watch, ref, toRefs } from 'vue'
+import { useElementTypeDic, useFolderTypeDic } from '../../hooks'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -58,7 +60,6 @@ export default {
   },
   data () {
     return {
-      dialogVisible: false, // 弹窗显示隐藏
       setElementInfoForm: {
         elementId: '', // 模块id
         elementName: '', // 模块名称
@@ -73,11 +74,27 @@ export default {
           { required: true, message: '必须选择分类', trigger: 'blur' }
         ]
       },
-      folderTypeList: [],
-      elementTypeList: [],
       dynamicTags: ['标签一', '标签二', '标签三'],
       inputVisible: false,
       inputValue: ''
+    }
+  },
+  setup (props) {
+    const { value } = toRefs(props)
+    const dialogVisible = ref(false)
+    const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
+    const { elementTypeList, getElementTypeDic } = useElementTypeDic()
+    watch(value, async (newVal) => {
+      if (newVal) {
+        await getFolderTypeDic()
+        await getElementTypeDic()
+      }
+      dialogVisible.value = newVal
+    })
+    return {
+      dialogVisible,
+      folderTypeList,
+      elementTypeList
     }
   },
   computed: {
@@ -162,33 +179,9 @@ export default {
           }
         })
       }
-    },
-    /**
-       * 获取模块类别列表
-       * @return {void}
-       */
-    getFolderTypeDic () {
-      $axios.get($api.api.getFolderTypeDic, {}).then(res => {
-        this.folderTypeList = res.data
-      })
-    },
-    /**
-       * 获取元素类别列表
-       * @return {void}
-       */
-    getElementTypeDic () {
-      $axios.get($api.api.getElementTypeDic, {}).then(res => {
-        this.elementTypeList = res.data
-      })
     }
   },
   watch: {
-    value (newVal) {
-      this.getFolderTypeDic()
-      this.getElementTypeDic()
-
-      this.dialogVisible = newVal
-    },
     data (newVal) {
       this.setElementInfoForm = {
         elementId: newVal.id,

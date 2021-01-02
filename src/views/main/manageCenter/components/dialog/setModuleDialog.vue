@@ -14,7 +14,7 @@
           </a-radio-group>
         </a-form-item>
         <a-form-item label="模块名称" name="name">
-          <a-input auto-complete="off" maxlength="20" v-model:value="setModuleForm.name"></a-input>
+          <a-input auto-complete="off" :maxlength="20" v-model:value="setModuleForm.name"></a-input>
         </a-form-item>
         <a-form-item label="文件夹类型" name="typeId" v-if="setModuleForm.moduleType == '0'">
           <br>
@@ -65,6 +65,8 @@ import { mapState } from 'vuex'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+import { watch, ref, toRefs } from 'vue'
+import { useElementTypeDic, useFolderTypeDic } from '../../hooks'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -82,7 +84,6 @@ export default {
   },
   data () {
     return {
-      dialogVisible: false, // 弹窗显示隐藏
       setModuleForm: {
         id: '', // 模块id
         name: '', // 模块名称
@@ -103,9 +104,25 @@ export default {
         typeId: [
           { required: true, message: '必须选择分类', trigger: 'blur' }
         ]
-      },
-      folderTypeList: [],
-      elementTypeList: []
+      }
+    }
+  },
+  setup (props) {
+    const { value } = toRefs(props)
+    const dialogVisible = ref(false)
+    const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
+    const { elementTypeList, getElementTypeDic } = useElementTypeDic()
+    watch(value, async (newVal) => {
+      if (newVal) {
+        await getFolderTypeDic()
+        await getElementTypeDic()
+      }
+      dialogVisible.value = newVal
+    })
+    return {
+      dialogVisible,
+      folderTypeList,
+      elementTypeList
     }
   },
   computed: {
@@ -171,33 +188,9 @@ export default {
           }
         })
       }
-    },
-    /**
-       * 获取模块类别列表
-       * @return {void}
-       */
-    getFolderTypeDic () {
-      $axios.get($api.api.getFolderTypeDic, {}).then(res => {
-        this.folderTypeList = res.data
-      })
-    },
-    /**
-       * 获取元素类别列表
-       * @return {void}
-       */
-    getElementTypeDic () {
-      $axios.get($api.api.getElementTypeDic, {}).then(res => {
-        this.elementTypeList = res.data
-      })
     }
   },
   watch: {
-    value (newVal) {
-      this.getFolderTypeDic()
-      this.getElementTypeDic()
-
-      this.dialogVisible = newVal
-    },
     data (newVal) {
       this.setModuleForm = {
         id: newVal.id,
