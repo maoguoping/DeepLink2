@@ -3,7 +3,7 @@
     title="编辑内容"
     v-model:visible="value"
     width="50%"
-    :before-close="handleClose">
+    @cancel="handleClose">
     <div class="doc" >
       <div class="read-box">
         <div class="doc-box">
@@ -49,7 +49,7 @@
     </div>
     <template v-slot:footer>
       <span class="dialog-footer">
-        <a-button @click="dialogVisible = false">取 消</a-button>
+        <a-button @click="handleClose">取 消</a-button>
         <a-button type="primary" @click="onSubmit">确 定</a-button>
       </span>
     </template>

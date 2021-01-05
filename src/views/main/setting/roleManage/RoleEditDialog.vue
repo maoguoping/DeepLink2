@@ -5,7 +5,7 @@
       v-model:visible="dialogVisible"
       width="30%"
       :close-on-click-modal="false"
-      :before-close="handleClose">
+      @cancel="handleClose">
       <div>
         <a-form :inline="true" label-width="80px" :model="roleInfo">
           <a-form-item label="角色名:" name="roleName">

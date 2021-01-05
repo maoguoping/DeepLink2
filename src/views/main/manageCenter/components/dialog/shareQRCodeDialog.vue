@@ -6,7 +6,7 @@
     okText="确定"
     cancelText="关闭"
     @ok="handleClose"
-    @close="handleClose"
+    @cancel="handleClose"
     class="shareQRCodeDialog"
   >
     <div class="svg-box" style="">

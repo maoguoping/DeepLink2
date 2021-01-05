@@ -5,7 +5,7 @@
       v-model:visible="dialogVisible"
       width="30%"
       :close-on-click-modal="false"
-      :before-close="handleClose">
+      @cancel="handleClose">
       <div>
         <a-form :inline="true" label-width="80px" :model="rightInfo">
           <a-form-item label="权限名:" name="rightName">

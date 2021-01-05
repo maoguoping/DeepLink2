@@ -5,7 +5,7 @@
       v-model:visible="dialogVisible"
       width="30%"
       :close-on-click-modal="false"
-      :before-close="handleClose">
+      @cancel="handleClose">
       <div>
         <div class="base-info">
           <label class="info-title">基本信息</label>

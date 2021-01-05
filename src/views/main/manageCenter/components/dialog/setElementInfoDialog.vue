@@ -4,7 +4,7 @@
       title="编辑信息"
       v-model:visible="dialogVisible"
       width="30%"
-      :before-close="handleClose">
+      @cancel="handleClose">
       <a-form :model="setElementInfoForm" :rules="rules" ref="setElementInfoForm">
         <a-form-item label="模块介绍" name="elementDescription">
           <br>

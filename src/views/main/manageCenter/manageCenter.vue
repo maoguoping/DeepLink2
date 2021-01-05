@@ -35,8 +35,8 @@
             </div>
             <Element v-if="isElement"></Element>
         </a-layout-content>
-        <SetProjectDialog v-model:value="showSetProjectDialog" :data="setProjectDialogData" @success="handleAddProjectSuccess"></SetProjectDialog>
-        <SetModuleDialog v-model:value="showSetModuleDialog" :data="setModuleDialogData" @success="handleSetModuleSuccess"></SetModuleDialog>
+        <SetProjectDialog v-model="showSetProjectDialog" :data="setProjectDialogData" @success="handleAddProjectSuccess"></SetProjectDialog>
+        <SetModuleDialog v-model="showSetModuleDialog" :data="setModuleDialogData" @success="handleSetModuleSuccess"></SetModuleDialog>
         <ListInfoDialog v-if="!isMainList" v-model:value="showListInfoDialog"></ListInfoDialog>
         <!-- <DocEditDialog v-model:value="showDocEditDialog" :data="editData"></DocEditDialog> -->
         <ShareQRCodeDialog v-model:value="showShareTip" :url="currentUrl"></ShareQRCodeDialog>
@@ -347,7 +347,6 @@ export default {
       this.defaultLoad = true
     }
   },
-  watch: {},
   beforeRouteLeave (to, from, next) {
     // 导航离开该组件的对应路由时调用
     // 可以访问组件实例 `this`;

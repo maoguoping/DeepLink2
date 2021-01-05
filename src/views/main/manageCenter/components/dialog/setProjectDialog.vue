@@ -4,7 +4,7 @@
           :title="data.type=='add'?'新建项目':'编辑项目'"
           v-model:visible="dialogVisible"
           width="30%"
-          :before-close="handleClose">
+          @cancel="handleClose">
           <a-form :model="setProjectForm" :rules="rules" ref="setProjectForm">
             <a-form-item label="项目名称" name="name">
               <a-input  auto-complete="off" :maxlength="20" v-model:value="setProjectForm.name"></a-input>
@@ -12,7 +12,7 @@
             <a-form-item label="项目介绍" name="description">
               <a-textarea
                 type="textarea"
-                :autosize="false"
+                :autoSize="false"
                 placeholder="请输入内容"
                 v-model:value="setProjectForm.description"
                 :maxlength="200"
@@ -33,13 +33,15 @@
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
+import { watch, ref, toRefs, reactive } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
-      required: true
+      required: true,
+      default: () => false
     },
     // 类型与数据
     data: {
@@ -47,31 +49,45 @@ export default {
       required: true
     }
   },
-  data () {
+  setup (props) {
+    console.debug('setup', props)
+    const { modelValue, data } = toRefs(props)
+    const rules = {
+      name: [
+        { required: true, message: '请输入项目名称', trigger: 'blur' },
+        { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
+      ],
+      description: [
+        { required: false },
+        { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+      ]
+    }
+    const dialogVisible = ref(false)
+    const setProjectForm = reactive({
+      id: '',
+      name: '',
+      oldName: '',
+      description: ''
+    })
+    watch(data, (newVal) => {
+      setProjectForm.id = newVal.id
+      setProjectForm.name = newVal.name
+      setProjectForm.oldName = newVal.name
+      setProjectForm.description = newVal.description || ''
+    })
+    watch(modelValue, (newVal) => {
+      dialogVisible.value = newVal
+    })
     return {
-      dialogVisible: false,
-      setProjectForm: {
-        id: '',
-        name: '',
-        oldName: '',
-        description: ''
-      },
-      rules: {
-        name: [
-          { required: true, message: '请输入项目名称', trigger: 'blur' },
-          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
-        ],
-        description: [
-          { required: false },
-          { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
-        ]
-      }
+      dialogVisible,
+      setProjectForm,
+      rules
     }
   },
   methods: {
     handleClose (done) {
       this.$refs.setProjectForm.resetFields()
-      this.$emit('update:value', false)
+      this.$emit('update:modelValue', false)
     },
     handleSubmit () {
       if (this.data.type === 'add') {
@@ -100,19 +116,6 @@ export default {
             })
           }
         })
-      }
-    }
-  },
-  watch: {
-    value (newVal) {
-      this.dialogVisible = newVal
-    },
-    data (newVal) {
-      this.setProjectForm = {
-        id: newVal.id,
-        name: newVal.name,
-        oldName: newVal.name,
-        description: newVal.description
       }
     }
   }

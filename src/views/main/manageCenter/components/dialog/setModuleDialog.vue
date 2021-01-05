@@ -4,7 +4,7 @@
       :title="data.type=='add'?'新建模块':'编辑模块'"
       v-model:visible="dialogVisible"
       width="30%"
-      :before-close="handleClose">
+      @cancel="handleClose">
       <a-form :model="setModuleForm" :rules="rules" ref="setModuleForm">
         <a-form-item label="模块类型" name="moduleType" v-show="data.type == 'add'">
           <br>
@@ -65,13 +65,13 @@ import { mapState } from 'vuex'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { watch, ref, toRefs } from 'vue'
+import { watch, ref, toRefs, reactive, readonly } from 'vue'
 import { useElementTypeDic, useFolderTypeDic } from '../../hooks'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true,
       default: false
@@ -82,47 +82,54 @@ export default {
       required: true
     }
   },
-  data () {
-    return {
-      setModuleForm: {
-        id: '', // 模块id
-        name: '', // 模块名称
-        oldName: '', // 模块原名称
-        typeId: '', // 模块类型id
-        moduleType: '0', // 模块类型(0：文件夹；1：元素)
-        description: '' // 模块描述
-      },
-      rules: {
-        name: [
-          { required: true, message: '请输入模块名称', trigger: 'blur' },
-          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
-        ],
-        description: [
-          { required: false },
-          { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
-        ],
-        typeId: [
-          { required: true, message: '必须选择分类', trigger: 'blur' }
-        ]
-      }
-    }
-  },
   setup (props) {
-    const { value } = toRefs(props)
+    const { modelValue, data } = toRefs(props)
+    const rules = readonly({
+      name: [
+        { required: true, message: '请输入模块名称', trigger: 'blur' },
+        { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
+      ],
+      description: [
+        { required: false },
+        { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+      ],
+      typeId: [
+        { required: true, message: '必须选择分类', trigger: 'blur' }
+      ]
+    })
     const dialogVisible = ref(false)
+    const setModuleForm = reactive({
+      id: '', // 模块id
+      name: '', // 模块名称
+      oldName: '', // 模块原名称
+      typeId: '', // 模块类型id
+      moduleType: '0', // 模块类型(0：文件夹；1：元素)
+      description: '' // 模块描述
+    })
     const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
     const { elementTypeList, getElementTypeDic } = useElementTypeDic()
-    watch(value, async (newVal) => {
+    watch(modelValue, async (newVal) => {
       if (newVal) {
         await getFolderTypeDic()
         await getElementTypeDic()
       }
       dialogVisible.value = newVal
     })
+    watch(data, (newVal) => {
+      const { id, name, description, typeId, moduleType } = newVal
+      setModuleForm.id = id
+      setModuleForm.name = name
+      setModuleForm.oldName = name
+      setModuleForm.description = description
+      setModuleForm.typeId = typeId
+      setModuleForm.moduleType = moduleType || '0'
+    })
     return {
       dialogVisible,
       folderTypeList,
-      elementTypeList
+      elementTypeList,
+      setModuleForm,
+      rules
     }
   },
   computed: {
@@ -138,7 +145,7 @@ export default {
        */
     handleClose (done) {
       this.$refs.setModuleForm.resetFields()
-      this.$emit('update:value', false)
+      this.$emit('update:modelValue', false)
     },
     /**
        * 提交表单
@@ -187,18 +194,6 @@ export default {
             })
           }
         })
-      }
-    }
-  },
-  watch: {
-    data (newVal) {
-      this.setModuleForm = {
-        id: newVal.id,
-        name: newVal.name,
-        oldName: newVal.name,
-        description: newVal.description,
-        typeId: newVal.typeId,
-        moduleType: newVal.moduleType || '0'
       }
     }
   }
