@@ -5,16 +5,17 @@
           v-model:visible="dialogVisible"
           width="30%"
           @cancel="handleClose">
-          <a-form :model="setProjectForm" :rules="rules" ref="setProjectForm">
+          <a-form :model="setProjectFormData" :rules="rules" ref="form">
             <a-form-item label="项目名称" name="name">
-              <a-input  auto-complete="off" :maxlength="20" v-model:value="setProjectForm.name"></a-input>
+              <a-input  auto-complete="off" :maxlength="20" v-model:value="setProjectFormData.name"  :defaultValue="setProjectFormData.name"></a-input>
             </a-form-item>
             <a-form-item label="项目介绍" name="description">
               <a-textarea
                 type="textarea"
                 :autoSize="false"
                 placeholder="请输入内容"
-                v-model:value="setProjectForm.description"
+                :defaultValue="setProjectFormData.description"
+                v-model:value="setProjectFormData.description"
                 :maxlength="200"
               >
               </a-textarea>
@@ -63,37 +64,37 @@ export default {
       ]
     }
     const dialogVisible = ref(false)
-    const setProjectForm = reactive({
+    const setProjectFormData = reactive({
       id: '',
       name: '',
       oldName: '',
       description: ''
     })
     watch(data, (newVal) => {
-      setProjectForm.id = newVal.id
-      setProjectForm.name = newVal.name
-      setProjectForm.oldName = newVal.name
-      setProjectForm.description = newVal.description || ''
+      setProjectFormData.id = newVal.id
+      setProjectFormData.name = newVal.name
+      setProjectFormData.oldName = newVal.name
+      setProjectFormData.description = newVal.description || ''
     })
     watch(modelValue, (newVal) => {
       dialogVisible.value = newVal
     })
     return {
       dialogVisible,
-      setProjectForm,
+      setProjectFormData,
       rules
     }
   },
   methods: {
     handleClose (done) {
-      this.$refs.setProjectForm.resetFields()
+      this.$refs.form.resetFields()
       this.$emit('update:modelValue', false)
     },
     handleSubmit () {
       if (this.data.type === 'add') {
-        this.$refs.setProjectForm.validate().then((valid) => {
+        this.$refs.form.validate().then((valid) => {
           if (valid) {
-            const info = this.setProjectForm
+            const info = this.setProjectFormData
             $axios.post($api.manageCenter.addProject, {
               info: JSON.stringify(info)
             }).then(res => {
@@ -104,9 +105,9 @@ export default {
           }
         })
       } else if (this.data.type === 'edit') {
-        this.$refs.setProjectForm.validate().then((valid) => {
+        this.$refs.form.validate().then((valid) => {
           if (valid) {
-            const info = this.setProjectForm
+            const info = this.setProjectFormData
             $axios.post($api.manageCenter.updateProject, {
               info: JSON.stringify(info)
             }).then(res => {

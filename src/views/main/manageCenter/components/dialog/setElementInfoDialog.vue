@@ -5,7 +5,7 @@
       v-model:visible="dialogVisible"
       width="30%"
       @cancel="handleClose">
-      <a-form :model="setElementInfoForm" :rules="rules" ref="setElementInfoForm">
+      <a-form :model="setElementInfoFormData" :rules="rules" ref="form">
         <a-form-item label="模块介绍" name="elementDescription">
           <br>
           <el-tag :key="tag" v-for="tag in dynamicTags" closable :disable-transitions="false"
@@ -21,7 +21,7 @@
             type="textarea"
             :rows="2"
             placeholder="请输入内容"
-            v-model:value="setElementInfoForm.elementDescription"
+            v-model:value="setElementInfoFormData.elementDescription"
             :maxlength="200"
           >
           </a-textarea>
@@ -60,7 +60,7 @@ export default {
   },
   data () {
     return {
-      setElementInfoForm: {
+      setElementInfoFormData: {
         elementId: '', // 模块id
         elementName: '', // 模块名称
         elementDescription: '' // 模块描述
@@ -109,7 +109,7 @@ export default {
        * @return {void}
        */
     handleClose (done) {
-      this.$refs.setElementInfoForm.resetFields()
+      this.$refs.form.resetFields()
       this.$emit('update:value', false)
     },
     handleCloseTag (tag) {
@@ -145,8 +145,8 @@ export default {
           parentType: this.listInfo.type,
           parentTypeId: this.listInfo.typeId
         }
-        Object.assign(params, this.setElementInfoForm)
-        this.$refs.setElementInfoForm.validate((valid) => {
+        Object.assign(params, this.setElementInfoFormData)
+        this.$refs.form.validate((valid) => {
           if (valid) {
             $axios.post($api.manageCenter.addModule, {
               info: JSON.stringify(params)
@@ -158,7 +158,7 @@ export default {
           }
         })
       } else if (this.data.type === 'edit') {
-        this.$refs.setElementInfoForm.validate((valid) => {
+        this.$refs.form.validate((valid) => {
           if (valid) {
             const params = {
               parentId: this.listInfo.id,
@@ -168,7 +168,7 @@ export default {
               parentType: this.listInfo.type,
               parentTypeId: this.listInfo.typeId
             }
-            Object.assign(params, this.setElementInfoForm)
+            Object.assign(params, this.setElementInfoFormData)
             $axios.post($api.manageCenter.updateModule, {
               info: JSON.stringify(params)
             }).then(res => {
@@ -183,7 +183,7 @@ export default {
   },
   watch: {
     data (newVal) {
-      this.setElementInfoForm = {
+      this.setElementInfoFormData = {
         elementId: newVal.id,
         elementName: newVal.name,
         oldelementName: newVal.name,

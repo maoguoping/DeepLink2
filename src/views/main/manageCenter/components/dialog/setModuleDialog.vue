@@ -5,20 +5,20 @@
       v-model:visible="dialogVisible"
       width="30%"
       @cancel="handleClose">
-      <a-form :model="setModuleForm" :rules="rules" ref="setModuleForm">
+      <a-form :model="setModuleFormData" :rules="rules" ref="form">
         <a-form-item label="模块类型" name="moduleType" v-show="data.type == 'add'">
           <br>
-          <a-radio-group v-model:value="setModuleForm.moduleType">
+          <a-radio-group v-model:value="setModuleFormData.moduleType">
             <a-radio value="0">文件夹</a-radio>
             <a-radio value="1">元素</a-radio>
           </a-radio-group>
         </a-form-item>
         <a-form-item label="模块名称" name="name">
-          <a-input auto-complete="off" :maxlength="20" v-model:value="setModuleForm.name"></a-input>
+          <a-input auto-complete="off" :maxlength="20" v-model:value="setModuleFormData.name"></a-input>
         </a-form-item>
-        <a-form-item label="文件夹类型" name="typeId" v-if="setModuleForm.moduleType == '0'">
+        <a-form-item label="文件夹类型" name="typeId" v-if="setModuleFormData.moduleType == '0'">
           <br>
-          <a-select v-model:value="setModuleForm.typeId">
+          <a-select v-model:value="setModuleFormData.typeId">
             <a-select-option
               v-for="item in folderTypeList"
               :key="item.id"
@@ -28,9 +28,9 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="元素类型" name="typeId" v-if="setModuleForm.moduleType === '1'">
+        <a-form-item label="元素类型" name="typeId" v-if="setModuleFormData.moduleType === '1'">
           <br>
-          <a-select v-model:value="setModuleForm.typeId">
+          <a-select v-model:value="setModuleFormData.typeId">
             <a-select-option
               v-for="item in elementTypeList"
               :key="item.id"
@@ -45,7 +45,7 @@
             type="textarea"
             :rows="2"
             placeholder="请输入内容"
-            v-model:value="setModuleForm.description"
+            v-model:value="setModuleFormData.description"
             :maxlength="200"
           >
           </a-textarea>
@@ -98,7 +98,7 @@ export default {
       ]
     })
     const dialogVisible = ref(false)
-    const setModuleForm = reactive({
+    const setModuleFormData = reactive({
       id: '', // 模块id
       name: '', // 模块名称
       oldName: '', // 模块原名称
@@ -117,18 +117,18 @@ export default {
     })
     watch(data, (newVal) => {
       const { id, name, description, typeId, moduleType } = newVal
-      setModuleForm.id = id
-      setModuleForm.name = name
-      setModuleForm.oldName = name
-      setModuleForm.description = description
-      setModuleForm.typeId = typeId
-      setModuleForm.moduleType = moduleType || '0'
+      setModuleFormData.id = id
+      setModuleFormData.name = name
+      setModuleFormData.oldName = name
+      setModuleFormData.description = description
+      setModuleFormData.typeId = typeId
+      setModuleFormData.moduleType = moduleType || '0'
     })
     return {
       dialogVisible,
       folderTypeList,
       elementTypeList,
-      setModuleForm,
+      setModuleFormData,
       rules
     }
   },
@@ -144,7 +144,7 @@ export default {
        * @return {void}
        */
     handleClose (done) {
-      this.$refs.setModuleForm.resetFields()
+      this.$refs.form.resetFields()
       this.$emit('update:modelValue', false)
     },
     /**
@@ -161,8 +161,8 @@ export default {
           parentType: this.listInfo.type,
           parentTypeId: this.listInfo.typeId
         }
-        Object.assign(params, this.setModuleForm)
-        this.$refs.setModuleForm.validate((valid) => {
+        Object.assign(params, this.setModuleFormData)
+        this.$refs.form.validate((valid) => {
           if (valid) {
             $axios.post($api.manageCenter.addModule, {
               info: JSON.stringify(params)
@@ -174,7 +174,7 @@ export default {
           }
         })
       } else if (this.data.type === 'edit') {
-        this.$refs.setModuleForm.validate((valid) => {
+        this.$refs.form.validate((valid) => {
           if (valid) {
             const params = {
               parentId: this.listInfo.id,
@@ -184,7 +184,7 @@ export default {
               parentType: this.listInfo.type,
               parentTypeId: this.listInfo.typeId
             }
-            Object.assign(params, this.setModuleForm)
+            Object.assign(params, this.setModuleFormData)
             $axios.post($api.manageCenter.updateModule, {
               info: JSON.stringify(params)
             }).then(res => {
