@@ -65,7 +65,7 @@
       ></a-pagination>
     </div>
     <RoleEditDialog
-      v-model:value="showRoleEditDialog"
+      v-model="showRoleEditDialog"
       :type="roleEditDialogType"
       :data="editRoleInfo"
       @update="editConfirm"

@@ -124,7 +124,7 @@
         :total="page.total"
       ></a-pagination>
     </div>
-    <UserEditDialog v-model:value="showUserEditDialog" :data="editUserInfo" :type="userEditDialogType"
+    <UserEditDialog v-model="showUserEditDialog" :data="editUserInfo" :type="userEditDialogType"
      @update="handleEditUpdate"></UserEditDialog>
   </div>
 </template>

@@ -13,7 +13,7 @@
             <div class="pic-box">
               <a-upload
                 class="avatar-uploader"
-                :action="$api.api.upload"
+                :action="uploadApi"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload">
@@ -30,14 +30,14 @@
                 <li>
                   <label>用户名：</label>
                   <span class="name-block-content">
-                    <EditText v-model:value="userInfo.username" @on-change="changeUsername"></EditText>
+                    <EditText v-model:value="userInfo.username"></EditText>
                   </span>
                 </li>
                 <li>
                   <span class="name-block clearfix">
                       <label>用户昵称：</label>
-                      <span class="name-block-content"><EditText v-model:value="userInfo.userTickName"
-                                                                 @on-change="changeUserTickName"></EditText></span>
+                      <span class="name-block-content">
+                        <EditText v-model:value="userInfo.userTickName"></EditText></span>
                     </span>
                 </li>
               </ul>
@@ -49,7 +49,7 @@
           <div class="content-box clearfix">
             <label class="info-label">用户角色:</label>
             <span class="info-detail">
-              <a-select v-model:value="userInfo.roleId" placeholder="请选择" style="width: 210px"  @change="changeRole">
+              <a-select v-model:value="userInfo.roleId" placeholder="请选择" style="width: 210px">
                 <a-select-option
                   v-for="item in roleList"
                   :key="item.id"
@@ -78,12 +78,13 @@ import UploadUtil from '@/lib/upload'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
+import { watch, ref, toRefs, readonly } from 'vue'
 import { useRoleListDic } from '../hooks'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     },
@@ -101,39 +102,20 @@ export default {
       }
     }
   },
-  setup () {
+  setup (props, { emit }) {
+    const { modelValue, data } = toRefs(props)
     const { roleList } = useRoleListDic()
-    return {
-      roleList
+    const dialogVisible = ref(false)
+    const nameBlockStatus = ref(0)
+    const tickNameBlockStatus = ref(0)
+    let userInfo = data
+    const imageUrl = ref('')
+    const uploadApi = readonly($api.api.upload)
+    const handleClose = () => {
+      emit('update:modelValue', false)
     }
-  },
-  data () {
-    return {
-      dialogVisible: false,
-      nameBlockStatus: 0,
-      tickNameBlockStatus: 0,
-      userInfo: this.data,
-      imageUrl: '',
-      $api
-    }
-  },
-  computed: {},
-  methods: {
-
-    /**
-       * 关闭窗口回调
-       * @return {Void}
-       */
-    handleClose () {
-      this.$emit('update:value', false)
-    },
-    /**
-       * 保存窗口数据
-       * @param {function} 回调函数
-       * @return {Void}
-       */
-    async saveFun () {
-      const { userId, username, userTickName, roleId } = this.userInfo
+    const saveFun = async () => {
+      const { userId, username, userTickName, roleId } = userInfo
       if (username === '') {
         message.warning('用户名不能为空！')
       } else if (userTickName === '') {
@@ -142,45 +124,20 @@ export default {
         try {
           await $axios.post($api.setting.saveUserInfo, { userInfo: JSON.stringify({ userId, username, userTickName, roleId }) })
           message.success('修改用户信息成功')
-          this.$emit('update')
+          emit('update')
         } catch (err) {
           message.error('修改用户信息失败！')
         }
       }
-    },
-    /**
-       * 用户名更改回调
-       * @param {String} username 用户名
-       * @return {Void}
-       */
-    changeUsername (username) {
-      this.userInfo.username = username
-    },
-    /**
-       * 用户昵称更改回调
-       * @param {String} userTickName 用户名
-       * @return {Void}
-       */
-    changeUserTickName (userTickName) {
-      this.userInfo.userTickName = userTickName
-    },
-    /**
-       * 用户角色更改回调
-       * @param {String} roleId 用户角色id
-       * @return {Void}
-       */
-    changeRole (roleId) {
-      this.userInfo.roleId = roleId
-    },
-    handleAvatarSuccess (res, file) {
-      this.imageUrl = URL.createObjectURL(file)
+    }
+    const handleAvatarSuccess = (res, file) => {
+      imageUrl.value = URL.createObjectURL(file)
       message.success('上传头像图片成功!')
-      console.log(this.imageUrl)
-    },
-    beforeAvatarUpload (file) {
+      console.log(imageUrl.value)
+    }
+    const beforeAvatarUpload = (file) => {
       const isJPG = file.type === 'image/jpeg'
       const isLt2M = file.size / 1024 / 1024 < 2
-
       if (!isJPG) {
         message.error('上传头像图片只能是 JPG 格式!')
         return false
@@ -218,19 +175,27 @@ export default {
       // return isJPG && isLt2M;
       // 阻止默认上传
       return false
-    },
-    // 覆盖默认的上传行为
-    httprequest () {
-
     }
-  },
-  watch: {
-    value (newVal) {
-      this.dialogVisible = newVal
-    },
-    data (newVal) {
-      console.log(newVal)
-      this.userInfo = newVal
+    // 覆盖默认的上传行为
+    const httprequest = () => {}
+    watch(modelValue, (newVal) => {
+      dialogVisible.value = newVal
+    })
+    watch(data, (newVal) => {
+      userInfo = newVal
+    })
+    return {
+      dialogVisible,
+      uploadApi,
+      roleList,
+      nameBlockStatus,
+      tickNameBlockStatus,
+      userInfo,
+      saveFun,
+      handleClose,
+      handleAvatarSuccess,
+      beforeAvatarUpload,
+      httprequest
     }
   },
   components: {

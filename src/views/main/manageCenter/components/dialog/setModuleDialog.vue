@@ -61,11 +61,11 @@
   </div>
 </template>
 <script>
-import { mapState } from 'vuex'
+import { useStore } from 'vuex'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { watch, ref, toRefs, reactive, readonly } from 'vue'
+import { watch, ref, toRefs, reactive, readonly, computed } from 'vue'
 import { useElementTypeDic, useFolderTypeDic } from '../../hooks'
 export default {
   name: 'set-project-dialog',
@@ -82,8 +82,9 @@ export default {
       required: true
     }
   },
-  setup (props) {
+  setup (props, { emit }) {
     const { modelValue, data } = toRefs(props)
+    const store = useStore()
     const rules = readonly({
       name: [
         { required: true, message: '请输入模块名称', trigger: 'blur' },
@@ -94,9 +95,10 @@ export default {
         { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
       ],
       typeId: [
-        { required: true, message: '必须选择分类', trigger: 'blur' }
+        { required: true, message: '必须选择分类', trigger: 'blur', type: 'number' }
       ]
     })
+    const form = ref(null)
     const dialogVisible = ref(false)
     const setModuleFormData = reactive({
       id: '', // 模块id
@@ -108,6 +110,41 @@ export default {
     })
     const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
     const { elementTypeList, getElementTypeDic } = useElementTypeDic()
+    const listInfo = computed(() => store.state.manageCenterStore.manageCenterInfo)
+    const handleClose = () => {
+      form.value.resetFields()
+      emit('update:modelValue', false)
+    }
+    const handleSubmit = () => {
+      let api, text
+      if (data.value.type === 'add') {
+        api = $api.manageCenter.addModule
+        text = '提交成功'
+      } else {
+        api = $api.manageCenter.updateModule
+        text = '修改成功'
+      }
+      const params = {
+        parentId: listInfo.value.id,
+        parentName: listInfo.value.name,
+        parentPath: listInfo.value.path,
+        parentPathId: listInfo.value.pathId,
+        parentType: listInfo.value.type,
+        parentTypeId: listInfo.value.typeId
+      }
+      Object.assign(params, setModuleFormData)
+      form.value.validate().then((valid) => {
+        if (valid) {
+          $axios.post(api, {
+            info: JSON.stringify(params)
+          }).then(res => {
+            message.success(text)
+            handleClose()
+            emit('success')
+          })
+        }
+      })
+    }
     watch(modelValue, async (newVal) => {
       if (newVal) {
         await getFolderTypeDic()
@@ -129,72 +166,10 @@ export default {
       folderTypeList,
       elementTypeList,
       setModuleFormData,
-      rules
-    }
-  },
-  computed: {
-    ...mapState({
-      listInfo: state => state.manageCenterStore.manageCenterInfo
-    })
-  },
-  methods: {
-    /**
-       * 弹窗关闭回调
-       * @param {function} done
-       * @return {void}
-       */
-    handleClose (done) {
-      this.$refs.form.resetFields()
-      this.$emit('update:modelValue', false)
-    },
-    /**
-       * 提交表单
-       * @return {void} 回调函数
-       */
-    handleSubmit () {
-      if (this.data.type === 'add') {
-        const params = {
-          parentId: this.listInfo.id,
-          parentName: this.listInfo.name,
-          parentPath: this.listInfo.path,
-          parentPathId: this.listInfo.pathId,
-          parentType: this.listInfo.type,
-          parentTypeId: this.listInfo.typeId
-        }
-        Object.assign(params, this.setModuleFormData)
-        this.$refs.form.validate((valid) => {
-          if (valid) {
-            $axios.post($api.manageCenter.addModule, {
-              info: JSON.stringify(params)
-            }).then(res => {
-              message.success('提交成功')
-              this.$emit('close')
-              this.$emit('success')
-            })
-          }
-        })
-      } else if (this.data.type === 'edit') {
-        this.$refs.form.validate((valid) => {
-          if (valid) {
-            const params = {
-              parentId: this.listInfo.id,
-              parentName: this.listInfo.name,
-              parentPath: this.listInfo.path,
-              parentPathId: this.listInfo.pathId,
-              parentType: this.listInfo.type,
-              parentTypeId: this.listInfo.typeId
-            }
-            Object.assign(params, this.setModuleFormData)
-            $axios.post($api.manageCenter.updateModule, {
-              info: JSON.stringify(params)
-            }).then(res => {
-              message.success('修改成功')
-              this.$emit('close')
-              this.$emit('success')
-            })
-          }
-        })
-      }
+      rules,
+      form,
+      handleClose,
+      handleSubmit
     }
   }
 }

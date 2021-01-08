@@ -37,9 +37,9 @@
         </a-layout-content>
         <SetProjectDialog v-model="showSetProjectDialog" :data="setProjectDialogData" @success="handleAddProjectSuccess"></SetProjectDialog>
         <SetModuleDialog v-model="showSetModuleDialog" :data="setModuleDialogData" @success="handleSetModuleSuccess"></SetModuleDialog>
-        <ListInfoDialog v-if="!isMainList" v-model:value="showListInfoDialog"></ListInfoDialog>
+        <ListInfoDialog v-if="!isMainList" v-model="showListInfoDialog"></ListInfoDialog>
         <!-- <DocEditDialog v-model:value="showDocEditDialog" :data="editData"></DocEditDialog> -->
-        <ShareQRCodeDialog v-model:value="showShareTip" :url="currentUrl"></ShareQRCodeDialog>
+        <ShareQRCodeDialog v-model="showShareTip" :url="currentUrl"></ShareQRCodeDialog>
     </a-layout>
 </template>
 <script>

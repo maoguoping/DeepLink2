@@ -42,7 +42,7 @@ export default {
       this.textVal = newVal
     },
     textVal (newVal) {
-      this.$emit('on-change', newVal)
+      this.$emit('update:value', newVal)
     }
   }
 }

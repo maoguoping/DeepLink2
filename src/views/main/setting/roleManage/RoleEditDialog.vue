@@ -32,11 +32,12 @@
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
+import { watch, ref, toRefs, reactive } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     },
@@ -57,33 +58,39 @@ export default {
       }
     }
   },
-  data () {
-    return {
-      dialogVisible: false,
-      roleInfo: {
-        roleId: '',
-        roleName: '',
-        description: ''
+  setup (props, { emit }) {
+    const { modelValue, type, data } = toRefs(props)
+    const dialogVisible = ref(false)
+    const roleInfo = reactive({
+      roleId: '',
+      roleName: '',
+      description: ''
+    })
+    const handleClose = () => {
+      emit('update:modelValue', false)
+    }
+    const addRole = async () => {
+      try {
+        await $axios.post($api.setting.addRole, {
+          roleInfo: JSON.stringify(roleInfo)
+        })
+        emit('update', type.value)
+      } catch (err) {
+        message.error('新增角色失败！')
       }
     }
-  },
-  computed: {},
-  methods: {
-
-    /**
-       * 关闭窗口回调
-       * @return {Void}
-       */
-    handleClose () {
-      this.$emit('update:value', false)
-    },
-    /**
-       * 保存窗口数据
-       * @param {function} 回调函数
-       * @return {Void}
-       */
-    saveFun () {
-      const { roleName, roleId } = this.roleInfo
+    const updateRole = async () => {
+      try {
+        await $axios.post($api.setting.updateRole, {
+          roleInfo: JSON.stringify(roleInfo)
+        })
+        emit('update', type.value)
+      } catch (err) {
+        message.error('修改角色失败！')
+      }
+    }
+    const saveFun = () => {
+      const { roleName, roleId } = roleInfo
       if (roleName === '') {
         message.warning('角色名不能为空！')
       } else if (roleId === '') {
@@ -91,95 +98,44 @@ export default {
       } else {
         $axios.post($api.setting.checkRoleExist, {
           roleInfo: JSON.stringify({ roleName, roleId }),
-          type: this.type
+          type: type.value
         }).then(res => {
           if (res.data.list.length > 0 && this.type === 'add') {
             message.warning('角色以及角色id不可重复！')
           } else {
-            if (this.type === 'add') {
-              this.addRole()
+            if (type.value === 'add') {
+              addRole()
             } else {
-              this.updateRole()
+              updateRole()
             }
           }
         }).catch(e => {
           console.log(e)
         })
       }
-    },
-    /**
-     * 新增角色
-     * @return {Void}
-     */
-    async addRole () {
-      try {
-        await $axios.post($api.setting.addRole, {
-          roleInfo: JSON.stringify(this.roleInfo)
-        })
-        this.$this.$emit('update', this.type)
-      } catch (err) {
-        message.error('新增角色失败！')
-      }
-    },
-    /**
-     * 修改角色
-     * @return {Void}
-     */
-    async updateRole () {
-      try {
-        await $axios.post($api.setting.updateRole, {
-          roleInfo: JSON.stringify(this.roleInfo)
-        })
-        this.$this.$emit('update', this.type)
-      } catch (err) {
-        message.error('修改角色失败！')
-      }
-    },
-    /**
-       * 用户名更改回调
-       * @param {String} username 用户名
-       * @return {Void}
-       */
-    changeUsername (username) {
-      this.userInfo.username = username
-    },
-    /**
-       * 用户昵称更改回调
-       * @param {String} userTickName 用户名
-       * @return {Void}
-       */
-    changeUserTickName (userTickName) {
-      this.userInfo.userTickName = userTickName
-    },
-    /**
-       * 用户角色更改回调
-       * @param {String} roleId 用户角色id
-       * @return {Void}
-       */
-    changeRole (roleId) {
-      this.userInfo.roleId = roleId
     }
-  },
-  watch: {
-    value (newVal) {
-      if (this.type === 'add') {
-        this.roleInfo = {
-          roleId: '',
-          roleName: '',
-          description: ''
-        }
+    watch(modelValue, (newVal) => {
+      if (type.value === 'add') {
+        roleInfo.roleId = ''
+        roleInfo.roleName = ''
+        roleInfo.description = ''
       }
-      this.dialogVisible = newVal
-    },
-    data (newVal) {
+      dialogVisible.value = newVal
+    })
+    watch(data, (newVal) => {
       console.log(newVal)
       const { roleId, roleName, description } = newVal
-      this.roleInfo = {
-        roleId, roleName, description
-      }
+      roleInfo.roleId = roleId
+      roleInfo.roleName = roleName
+      roleInfo.description = description
+    })
+    return {
+      dialogVisible,
+      roleInfo,
+      handleClose,
+      saveFun
     }
-  },
-  components: {}
+  }
 }
 </script>
 

@@ -71,7 +71,7 @@
       ></a-pagination>
     </div>
     <RightEditDialog
-      v-model:value="showRightEditDialog"
+      v-model="showRightEditDialog"
       :type="rightEditDialogType"
       :data="editRightInfo"
       @update="editConfirm"

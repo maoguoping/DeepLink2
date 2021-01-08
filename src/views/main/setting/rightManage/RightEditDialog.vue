@@ -51,11 +51,12 @@
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+import { watch, ref, toRefs, reactive, readonly, toRaw } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     },
@@ -77,165 +78,55 @@ export default {
       }
     }
   },
-  data () {
-    return {
-      dialogVisible: false,
-      transferTitle: [
-        '无权限角色',
-        '有权限角色'
-      ],
-      rightInfo: {
-        rightId: '',
-        rightName: '',
-        description: '',
-        roleIds: [],
-        path: ''
-      },
-      roleList: [],
-      ownRoleList: [],
-      filterMethod (query, item) {
-        return item.name.indexOf(query) > -1
-      }
-    }
-  },
-  computed: {},
-  methods: {
-    handleRoleChange (targetKeys, direction, moveKeys) {
-      console.log(targetKeys, direction, moveKeys)
-      this.ownRoleList = targetKeys
-    },
-    /**
-     * 关闭窗口回调
-     * @return {Void}
-     */
-    handleClose () {
-      this.$emit('update:value', false)
-    },
-    /**
-     * 保存窗口数据
-     * @param {function} 回调函数
-     * @return {Void}
-     */
-    async saveFun () {
-      const { rightName, rightId } = this.rightInfo
-      if (rightName === '') {
-        message.warning('权限名不能为空！')
-      } else {
-        try {
-          const res = await $axios.post($api.setting.checkRightExist, {
-            rightInfo: JSON.stringify({ rightName, rightId }),
-            type: this.type
-          })
-          if (res.list.length > 0 && this.type === 'add') {
-            message.warning('权限以及权限id不可重复！')
-          } else {
-            console.log(this.type)
-            if (this.type === 'add') {
-              this.addRight()
-            } else {
-              this.updateRight()
-            }
-          }
-        } catch (err) {
-          message.error(' 保存窗口数据失败！')
-        }
-      }
-    },
-    /**
-     * 新增权限
-     * @return {Void}
-     */
-    async addRight () {
-      try {
-        await $axios.post($api.setting.addRight, {
-          rightInfo: JSON.stringify(this.rightInfo),
-          addRoleIds: this.ownRoleList.join(',')
-        })
-        this.$emit('update', this.type)
-      } catch (err) {
-        message.error('新增权限角色失败')
-      }
-    },
-    /**
-     * 修改权限
-     * @return {Void}
-     */
-    async updateRight () {
-      const { preview, after } = this.getArrDifference(this.rightInfo.roleIds, this.ownRoleList)
-      const { rightId } = this.rightInfo
-      try {
-        await $axios.post($api.setting.changeRoleRight, {
-          rightId: rightId,
-          addRoleIds: after.join(','),
-          deleteRoleIds: preview.join(',')
-        })
-        this.$emit('update', this.type)
-      } catch (err) {
-        message.error('修改权限角色失败')
-      }
-    },
-    /**
-     * 用户名更改回调
-     * @param {String} username 用户名
-     * @return {Void}
-     */
-    changeUsername (username) {
-      this.userInfo.username = username
-    },
-    /**
-     * 用户昵称更改回调
-     * @param {String} userTickName 用户名
-     * @return {Void}
-     */
-    changeUserTickName (userTickName) {
-      this.userInfo.userTickName = userTickName
-    },
-    /**
-     * 用户权限更改回调
-     * @param {String} rightId 用户权限id
-     * @return {Void}
-     */
-    changeRole (rightId) {
-      this.userInfo.rightId = rightId
-    },
-    /**
-     * 加载权限下拉列表
-     * @return {void}
-     */
-    async getRoleListDic () {
+  setup (props, { emit }) {
+    const { modelValue, data, type } = toRefs(props)
+    const dialogVisible = ref(false)
+    const transferTitle = readonly([
+      '无权限角色',
+      '有权限角色'
+    ])
+    const roleList = ref([])
+    const ownRoleList = ref([])
+    const rightInfo = reactive({
+      rightId: '',
+      rightName: '',
+      description: '',
+      roleIds: [],
+      path: ''
+    })
+    const getRoleListDic = async () => {
       const res = await $axios.get($api.api.getRoleListDic, {})
-      this.roleList = res.data.map(item => {
+      roleList.value = res.data.map(item => {
         return {
           ...item,
           key: item.id
           // chosen: false
         }
       })
-      console.log(this.roleList)
-    },
-    /**
-     * 获取拥有权限的角色
-     * @return {void}
-     */
-    async getRoleByRight () {
+    }
+    const getRoleByRight = async () => {
       setTimeout(() => {
-        this.dialogVisible = true
+        dialogVisible.value = true
       }, 300)
       try {
         const res = await $axios.post($api.setting.getRoleByRight, {
-          rightId: this.rightInfo.rightId
+          rightId: rightInfo.rightId
         })
         let roleIds = []
         if (res.list.length > 0) {
           roleIds = res.list.map(i => i.roleId)
         }
-        this.ownRoleList = roleIds
-        this.rightInfo.roleIds = roleIds
+        ownRoleList.value = roleIds
+        rightInfo.roleIds = roleIds
       } catch (err) {
         message.error('加载拥有权限的角色失败')
       }
-    },
-    getArrDifference (arr1, arr2) {
+    }
+    const handleRoleChange = (targetKeys, direction, moveKeys) => {
+      console.log(targetKeys, direction, moveKeys)
+      ownRoleList.value = targetKeys
+    }
+    const getArrDifference = (arr1, arr2) => {
       let arr1Change = []
       let arr2Change = []
       arr1Change = arr1.filter(item => {
@@ -249,31 +140,92 @@ export default {
         after: arr2Change
       }
     }
-  },
-  async mounted () {
-    // await this.getRoleListDic()
-  },
-  watch: {
-    async value (newVal) {
+    const updateRight = async () => {
+      const { preview, after } = getArrDifference(rightInfo.roleIds, ownRoleList.value)
+      const { rightId } = rightInfo
+      try {
+        await $axios.post($api.setting.changeRoleRight, {
+          rightId: rightId,
+          addRoleIds: after.join(','),
+          deleteRoleIds: preview.join(',')
+        })
+        emit('update', type.value)
+      } catch (err) {
+        message.error('修改权限角色失败')
+      }
+    }
+    const addRight = async () => {
+      try {
+        await $axios.post($api.setting.addRight, {
+          rightInfo: JSON.stringify(rightInfo),
+          addRoleIds: ownRoleList.value.join(',')
+        })
+        emit('update', type.value)
+      } catch (err) {
+        message.error('新增权限角色失败')
+      }
+    }
+    const saveFun = async () => {
+      const { rightName, rightId } = toRaw(rightInfo)
+      if (rightName === '') {
+        message.warning('权限名不能为空！')
+      } else {
+        try {
+          const res = await $axios.post($api.setting.checkRightExist, {
+            rightInfo: JSON.stringify({ rightName, rightId }),
+            type: type.value
+          })
+          if (res.list.length > 0 && this.type === 'add') {
+            message.warning('权限以及权限id不可重复！')
+          } else {
+            console.log(type.value)
+            if (type.value === 'add') {
+              addRight()
+            } else {
+              updateRight()
+            }
+          }
+        } catch (err) {
+          message.error(' 保存窗口数据失败！')
+        }
+      }
+    }
+    const handleClose = () => {
+      emit('update:modelValue', false)
+    }
+    watch(modelValue, async (newVal) => {
       if (newVal) {
-        await this.getRoleListDic()
-        if (this.type === 'add') {
-          this.rightInfo = {
-            rightId: '',
-            rightName: '',
-            description: ''
-          }
-          this.dialogVisible = true
+        await getRoleListDic()
+        if (type.value === 'add') {
+          rightInfo.rightId = ''
+          rightInfo.rightName = ''
+          rightInfo.description = ''
+          dialogVisible.value = true
         } else {
-          const { rightId, rightName, description, path } = this.data
-          this.rightInfo = {
-            rightId, rightName, description, path
-          }
-          this.getRoleByRight()
+          const { rightId, rightName, description, path } = data.value
+          rightInfo.rightId = rightId
+          rightInfo.rightName = rightName
+          rightInfo.description = description
+          rightInfo.path = path
+          getRoleByRight()
         }
       } else {
-        this.dialogVisible = false
+        dialogVisible.value = false
       }
+    })
+    const filterMethod = (query, item) => {
+      return item.name.indexOf(query) > -1
+    }
+    return {
+      dialogVisible,
+      transferTitle,
+      rightInfo,
+      roleList,
+      ownRoleList,
+      filterMethod,
+      handleRoleChange,
+      handleClose,
+      saveFun
     }
   }
 }

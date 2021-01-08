@@ -17,11 +17,12 @@
 <script>
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+import { watch, ref, toRefs } from 'vue'
 export default {
   name: 'shareQRCodeDialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     },
@@ -31,31 +32,25 @@ export default {
       default: ''
     }
   },
-  data () {
-    return {
-      dialogVisible: false,
-      svg: ''
+  setup (props, { emit }) {
+    const { modelValue } = toRefs(props)
+    const dialogVisible = ref(false)
+    const svg = ref('')
+    const handleClose = () => {
+      emit('update:modelValue', false)
     }
-  },
-  computed: {
-
-  },
-  methods: {
-    handleClose () {
-      this.$emit('update:value', false)
-    }
-  },
-  watch: {
-    value (newVal) {
+    watch(modelValue, (newVal) => {
       $axios.post($api.api.getQrCodeImageFromUrl, {
         query: window.location.href
       }).then(res => {
-        this.svg = res.data
+        svg.value = res.data
       })
-      this.dialogVisible = newVal
-    },
-    url (newVal) {
-      console.log(newVal)
+      dialogVisible.value = newVal
+    })
+    return {
+      dialogVisible,
+      svg,
+      handleClose
     }
   }
 }

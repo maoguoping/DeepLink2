@@ -25,27 +25,24 @@
     </div>
 </template>
 <script>
-import { mapState } from 'vuex'
+import { useStore } from 'vuex'
+import { watch, ref, toRefs, computed } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
     // 显示隐藏
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     }
   },
-  data () {
-    return {
-      dialogVisible: false
-    }
-  },
-  computed: {
-    ...mapState({
-      manageCenterInfo: state => state.manageCenterStore.manageCenterInfo
-    }),
-    listInfo () {
-      return this.manageCenterInfo || {
+  setup (props, { emit }) {
+    const { modelValue } = toRefs(props)
+    const store = useStore()
+    const dialogVisible = ref(false)
+    const manageCenterInfo = computed(() => store.state.manageCenterStore.manageCenterInfo)
+    const listInfo = computed(() => {
+      return manageCenterInfo.value || {
         name: '',
         description: '',
         id: '',
@@ -63,16 +60,17 @@ export default {
         modifyDate: '',
         children: []
       }
+    })
+    watch(modelValue, (newVal) => {
+      dialogVisible.value = newVal
+    })
+    const handleClose = () => {
+      emit('update:modelValue', false)
     }
-  },
-  methods: {
-    handleClose (done) {
-      this.$emit('update:value', false)
-    }
-  },
-  watch: {
-    value (newVal) {
-      this.dialogVisible = newVal
+    return {
+      dialogVisible,
+      listInfo,
+      handleClose
     }
   }
 }

@@ -50,8 +50,7 @@ export default {
       required: true
     }
   },
-  setup (props) {
-    console.debug('setup', props)
+  setup (props, { emit }) {
     const { modelValue, data } = toRefs(props)
     const rules = {
       name: [
@@ -64,12 +63,38 @@ export default {
       ]
     }
     const dialogVisible = ref(false)
+    const form = ref(null)
     const setProjectFormData = reactive({
       id: '',
       name: '',
       oldName: '',
       description: ''
     })
+    const handleClose = () => {
+      form.value.resetFields()
+      emit('update:modelValue', false)
+    }
+    const handleSubmit = () => {
+      let api, text
+      if (data.value.type === 'add') {
+        api = $api.manageCenter.addProject
+        text = '提交成功'
+      } else {
+        api = $api.manageCenter.updateProject
+        text = '修改成功'
+      }
+      form.value.validate().then((valid) => {
+        if (valid) {
+          $axios.post(api, {
+            info: JSON.stringify(setProjectFormData)
+          }).then(res => {
+            message.success(text)
+            emit('success')
+            handleClose()
+          })
+        }
+      })
+    }
     watch(data, (newVal) => {
       setProjectFormData.id = newVal.id
       setProjectFormData.name = newVal.name
@@ -82,42 +107,10 @@ export default {
     return {
       dialogVisible,
       setProjectFormData,
-      rules
-    }
-  },
-  methods: {
-    handleClose (done) {
-      this.$refs.form.resetFields()
-      this.$emit('update:modelValue', false)
-    },
-    handleSubmit () {
-      if (this.data.type === 'add') {
-        this.$refs.form.validate().then((valid) => {
-          if (valid) {
-            const info = this.setProjectFormData
-            $axios.post($api.manageCenter.addProject, {
-              info: JSON.stringify(info)
-            }).then(res => {
-              message.success('提交成功')
-              this.$emit('close')
-              this.$emit('success')
-            })
-          }
-        })
-      } else if (this.data.type === 'edit') {
-        this.$refs.form.validate().then((valid) => {
-          if (valid) {
-            const info = this.setProjectFormData
-            $axios.post($api.manageCenter.updateProject, {
-              info: JSON.stringify(info)
-            }).then(res => {
-              message.success('修改成功')
-              this.$emit('close')
-              this.$emit('success')
-            })
-          }
-        })
-      }
+      rules,
+      form,
+      handleClose,
+      handleSubmit
     }
   }
 }
