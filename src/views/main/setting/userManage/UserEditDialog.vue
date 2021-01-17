@@ -77,7 +77,7 @@ import EditText from '@/components/modules/EditText'
 import UploadUtil from '@/lib/upload'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { message } from 'ant-design-vue'
+import { message, Upload } from 'ant-design-vue'
 import { watch, ref, toRefs, readonly } from 'vue'
 import { useRoleListDic } from '../hooks'
 export default {
@@ -199,7 +199,8 @@ export default {
     }
   },
   components: {
-    EditText
+    EditText,
+    'a-upload': Upload
   }
 }
 </script>

@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import { Breadcrumb } from 'ant-design-vue'
 import { mapState, mapMutations } from 'vuex'
 import Utils from '@/lib/utils.js'
 export default {
@@ -109,6 +110,10 @@ export default {
       })
       this.$emit('path-link-to', name)
     }
+  },
+  components: {
+    'a-breadcrumb': Breadcrumb,
+    'a-breadcrumb-item': Breadcrumb.Item
   }
 }
 </script>

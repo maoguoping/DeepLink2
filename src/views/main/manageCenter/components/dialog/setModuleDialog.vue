@@ -62,7 +62,7 @@
 </template>
 <script>
 import { useStore } from 'vuex'
-import { message } from 'ant-design-vue'
+import { message, Radio } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { watch, ref, toRefs, reactive, readonly, computed } from 'vue'
@@ -171,6 +171,10 @@ export default {
       handleClose,
       handleSubmit
     }
+  },
+  components: {
+    'a-radio': Radio,
+    'a-radio-group': Radio.Group
   }
 }
 </script>

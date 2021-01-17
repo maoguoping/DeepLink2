@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import { message } from 'ant-design-vue'
+import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import Utils from '@/lib/utils.js'
 import $axios from '@/lib/axios'
@@ -335,7 +335,12 @@ export default {
     SearchBox,
     RightEditDialog,
     PlusOutlined,
-    DeleteOutlined
+    DeleteOutlined,
+    'a-table': Table,
+    'a-pagination': Pagination,
+    'a-breadcrumb': Breadcrumb,
+    'a-breadcrumb-item': Breadcrumb.Item,
+    'a-range-picker': DatePicker.RangePicker
   }
 }
 </script>

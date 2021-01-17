@@ -42,6 +42,7 @@
 </template>
 <script>
 import { defineAsyncComponent } from 'vue'
+import { Menu } from 'ant-design-vue'
 export default {
   name: 'manage-center',
   data () {
@@ -75,7 +76,11 @@ export default {
   components: {
     userManage: defineAsyncComponent(() => import('./userManage')),
     roleManage: defineAsyncComponent(() => import('./roleManage')),
-    rightManage: defineAsyncComponent(() => import('./rightManage'))
+    rightManage: defineAsyncComponent(() => import('./rightManage')),
+    'a-menu': Menu,
+    'a-menu-item': Menu.Item,
+    'a-sub-menu': Menu.SubMenu,
+    'a-menu-item-group': Menu.ItemGroup
     // 在#app元素内，注册组件
   },
   mounted () {

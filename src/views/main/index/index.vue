@@ -20,6 +20,7 @@
 
 <script>
 // import DocLink from '@/components/main/docView/DocLink.vue'
+import { Carousel } from 'ant-design-vue'
 export default {
   name: 'doc-index',
   data () {
@@ -44,6 +45,9 @@ export default {
         }
       ]
     }
+  },
+  components: {
+    'a-carousel': Carousel
   }
 }
 </script>

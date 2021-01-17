@@ -36,7 +36,7 @@
 
 <script>
 import { mapState, mapGetters, mapMutations } from 'vuex'
-import { message } from 'ant-design-vue'
+import { message, Dropdown, Menu } from 'ant-design-vue'
 import { ref } from 'vue'
 export default {
   name: 'header-bar',
@@ -135,6 +135,11 @@ export default {
       const activeName = (path === '/') ? '/index' : path
       this.changeHeaderBarCurrentMenu(activeName)
     }
+  },
+  components: {
+    'a-dropdown': Dropdown,
+    'a-menu': Menu,
+    'a-menu-item': Menu.Item
   }
 }
 </script>

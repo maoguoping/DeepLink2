@@ -44,7 +44,7 @@
 </template>
 <script>
 import { mapState, mapMutations } from 'vuex'
-import { Modal, message } from 'ant-design-vue'
+import { message, Modal, Row } from 'ant-design-vue'
 import { PlusOutlined, ExclamationOutlined, DeleteOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
@@ -128,7 +128,8 @@ export default {
     PlusOutlined,
     ExclamationOutlined,
     DeleteOutlined,
-    ShareAltOutlined
+    ShareAltOutlined,
+    'a-row': Row
   },
   methods: {
     ...mapMutations([

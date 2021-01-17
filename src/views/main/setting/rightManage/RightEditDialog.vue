@@ -48,7 +48,7 @@
   </div>
 </template>
 <script>
-import { message } from 'ant-design-vue'
+import { message, Transfer } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { watch, ref, toRefs, reactive, readonly, toRaw } from 'vue'
@@ -227,6 +227,9 @@ export default {
       handleClose,
       saveFun
     }
+  },
+  components: {
+    'a-transfer': Transfer
   }
 }
 </script>

@@ -62,7 +62,7 @@ import Utils from '@/lib/utils.js'
 import { mapState, mapMutations } from 'vuex'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { message } from 'ant-design-vue'
+import { message, Dropdown, Table, Pagination, Tag, Menu } from 'ant-design-vue'
 
 export default {
   name: 'list-view',
@@ -130,7 +130,14 @@ export default {
       pathId: state => state.manageCenterStore.manageCenterPathId
     })
   },
-  components: {},
+  components: {
+    'a-dropdown': Dropdown,
+    'a-table': Table,
+    'a-pagination': Pagination,
+    'a-tag': Tag,
+    'a-menu': Menu,
+    'a-menu-item': Menu.Item
+  },
   methods: {
     ...mapMutations(['changeManageCenterPath']),
     /**

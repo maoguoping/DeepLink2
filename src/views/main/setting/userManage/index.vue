@@ -135,7 +135,7 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
-import { message } from 'ant-design-vue'
+import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
 import { useRoleListDic } from '../hooks'
 export default {
   name: 'userManage',
@@ -363,7 +363,12 @@ export default {
   },
   components: {
     SearchBox,
-    UserEditDialog
+    UserEditDialog,
+    'a-table': Table,
+    'a-pagination': Pagination,
+    'a-breadcrumb': Breadcrumb,
+    'a-breadcrumb-item': Breadcrumb.Item,
+    'a-range-picker': DatePicker.RangePicker
   }
 }
 </script>

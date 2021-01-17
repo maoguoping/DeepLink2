@@ -1,14 +1,18 @@
+const webpack = require('webpack')
 const path = require('path')
+const chalk = require('chalk')
 const isProduction = process.env.NODE_ENV === 'production'
+const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
+const ProgressBarPlugin = require('progress-bar-webpack-plugin')
 const cdn = {
   js: [
-    'https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.3/vuex.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/vue-lazyload/1.3.3/vue-lazyload.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js'
+    'https://cdn.jsdelivr.net/npm/vue@3.0.5/dist/vue.global.min.js',
+    'https://cdn.jsdelivr.net/npm/vuex@4.0.0-rc.2/dist/vuex.global.min.js',
+    'https://cdn.jsdelivr.net/npm/vue-lazyload@1.3.3/vue-lazyload.min.js',
+    'https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js'
   ]
 }
 // const rootUrl = 'http://localhost:3000'
@@ -17,6 +21,7 @@ module.exports = {
   outputDir: process.env.outputDir,
   assetsDir: 'static',
   productionSourceMap: false,
+  parallel: require('os').cpus().length > 1, 
   chainWebpack: config => {
     /* 添加分析工具 */
     if (isProduction) {
@@ -32,7 +37,12 @@ module.exports = {
       }
     }
     // 移除 prefetch 插件
+    config.plugin('preload').tap(args => {
+      args[0].fileBlacklist.push(/runtime~.+\.js$/) //正则匹配runtime文件名，去除该文件的preload
+      return args
+    })
     config.plugins.delete('prefetch')
+    
     config.optimization.splitChunks({
       cacheGroups: {
         common: {
@@ -52,7 +62,7 @@ module.exports = {
           reuseExistingChunk: true,
           enforce: true
         },
-        elementUi: {
+        antDesignVue: {
           name: 'ant-design-vue',
           test: /[\\/]node_modules[\\/]ant-design-vue[\\/]/,
           chunks: 'initial',
@@ -153,7 +163,7 @@ module.exports = {
               test: /\.js$/,
               include: path.resolve('src'),
               use: [
-                'thread-loader'
+                'babel-loader?cacheDirectory'
                 // your expensive loader (e.g babel-loader)
               ]
             }
@@ -161,6 +171,11 @@ module.exports = {
         },
         plugins: [
           new BundleAnalyzerPlugin(),
+          new ProgressBarPlugin({
+            format: ' build [:bar]' + chalk.green.bold(':precent') + ':elapsed second',
+            clear: false
+          }),
+          new webpack.IgnorePlugin(/\.\/locale/, /moment/),
           new CompressionPlugin({
             test: /\.js$|\.html$|\.css/,
             // 匹配文件名
@@ -171,6 +186,24 @@ module.exports = {
           }),
           new ScriptExtHtmlWebpackPlugin({
             inline: /runtime~.+\.js$/ // 正则匹配runtime文件名
+          })
+        ]
+      }
+    } else {
+      return {
+        plugins: [
+          new webpack.DllReferencePlugin({
+            context: process.cwd(),
+            manifest: require('./dll/vendor-manifest.json')
+          }),
+          // 将 dll 注入到 生成的 html 模板中
+          new AddAssetHtmlPlugin({
+          // dll文件位置
+            filepath: path.resolve(__dirname, './dll/*.js'),
+            // dll 引用路径
+            publicPath: './vendor',
+            // dll最终输出的目录
+            outputPath: './vendor'
           })
         ]
       }
