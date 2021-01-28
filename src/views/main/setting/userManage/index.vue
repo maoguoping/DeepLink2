@@ -135,118 +135,97 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
+import { ref, reactive } from 'vue'
 import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
-import { useRoleListDic } from '../hooks'
+import { useRoleListDic, usePage, useTableSort } from '../hooks'
 export default {
   name: 'userManage',
   setup () {
     console.log('setup')
     const { roleList } = useRoleListDic()
-    return {
-      roleList
-    }
-  },
-  data () {
-    const page = {
-      currentPage: 1,
-      pageSize: 10,
-      total: 0,
-      list: [10, 20, 30, 40]
-    }
-    return {
-      page,
-      // roleList: [], // 角色列表
-      breadcrumbList: [
-        {
-          label: '用户设置',
-          value: '1'
-        },
-        {
-          label: '用户管理',
-          value: '11'
-        }
-      ],
-      userListData: [],
-      form: {
-        username: '',
-        userId: '',
-        userTickName: '',
-        roleId: [],
-        createTime: [],
-        lastLoginTime: []
+    const { page } = usePage()
+    const breadcrumbList = [
+      {
+        label: '用户设置',
+        value: '1'
       },
-      userEditDialogType: 'edit',
-      editUserInfo: {},
-      showUserEditDialog: false, // 显示编辑用户弹框，
-      sortCol: 'username',
-      sortOrder: 'ASC',
-      labelCol: {
-        span: 2
+      {
+        label: '用户管理',
+        value: '11'
+      }
+    ]
+    const columns = [
+      {
+        title: '用户名',
+        dataIndex: 'username',
+        key: 'username',
+        fixed: 'left'
       },
-      wrapperCol: {
-        span: 4
+      {
+        title: '用户id',
+        dataIndex: 'userId',
+        key: 'userId',
+        fixed: 'left'
       },
-      columns: [
-        {
-          title: '用户名',
-          dataIndex: 'username',
-          key: 'username',
-          fixed: 'left'
-        },
-        {
-          title: '用户id',
-          dataIndex: 'userId',
-          key: 'userId',
-          fixed: 'left'
-        },
-        {
-          title: '用户昵称',
-          dataIndex: 'userTickName',
-          key: 'userTickName'
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'createTime',
-          key: 'createTime'
-        },
-        {
-          title: '最后登录时间',
-          dataIndex: 'lastLoginTime',
-          key: 'lastLoginTime'
-        },
-        {
-          title: '最后登录时间',
-          dataIndex: 'lastLoginTime',
-          key: 'lastLoginTime'
-        },
-        {
-          title: '角色',
-          key: 'roleName',
-          dataIndex: 'roleName'
-        },
-        {
-          title: '操作',
-          key: 'action',
-          fixed: 'right',
-          slots: { customRender: 'action' }
-        }
-      ]
-    }
-  },
-  methods: {
-    /**
-       * 加载列表数据
-       * @return {void}
-       */
-    async load () {
+      {
+        title: '用户昵称',
+        dataIndex: 'userTickName',
+        key: 'userTickName'
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime'
+      },
+      {
+        title: '最后登录时间',
+        dataIndex: 'lastLoginTime',
+        key: 'lastLoginTime'
+      },
+      {
+        title: '最后登录时间',
+        dataIndex: 'lastLoginTime',
+        key: 'lastLoginTime'
+      },
+      {
+        title: '角色',
+        key: 'roleName',
+        dataIndex: 'roleName'
+      },
+      {
+        title: '操作',
+        key: 'action',
+        fixed: 'right',
+        slots: { customRender: 'action' }
+      }
+    ]
+    const userListData = ref([])
+    const editUserInfo = ref({})
+    const userEditDialogType = ref('edit')
+    const showUserEditDialog = ref(false)
+    const form = reactive({
+      username: '',
+      userId: '',
+      userTickName: '',
+      roleId: [],
+      createTime: [],
+      lastLoginTime: []
+    })
+    const labelCol = reactive({
+      span: 2
+    })
+    const wrapperCol = reactive({
+      span: 5
+    })
+    console.debug(page.pageSize)
+    const load = async () => {
       console.log('load')
-      const { username, userId, userTickName, roleId, createTime, lastLoginTime } = this.form
-      const { currentPage, pageSize } = this.page
+      const { username, userId, userTickName, roleId, createTime, lastLoginTime } = form
+      const { currentPage, pageSize } = page
       const createTimeList = []
-
       const loginTimeList = []
       if (createTime && createTime.length === 2) {
-        createTime.map(item => {
+        createTime.forEach(item => {
           const date = new Date(item)
           if (date !== new Date(null)) {
             createTimeList.push(Utils.timeFormat(date, 'yyyy-MM-dd hh:mm:ss'))
@@ -254,7 +233,7 @@ export default {
         })
       }
       if (lastLoginTime && lastLoginTime.length === 2) {
-        lastLoginTime.map(item => {
+        lastLoginTime.forEach(item => {
           const date = new Date(item)
           if (date !== new Date(null)) {
             loginTimeList.push(Utils.timeFormat(date, 'yyyy-MM-dd hh:mm:ss'))
@@ -262,6 +241,7 @@ export default {
         })
       }
       try {
+        console.debug('roleId', roleId)
         const res = await $axios.post($api.setting.getUserList, {
           searchData: JSON.stringify({
             username,
@@ -270,24 +250,49 @@ export default {
             roleId: roleId ? roleId.join(',') : '',
             createTime: createTimeList ? createTimeList.join(',') : '',
             lastLoginTime: loginTimeList ? loginTimeList.join(',') : '',
-            orderName: this.sortCol,
-            orderType: this.sortOrder,
+            orderName: sortCol.value,
+            orderType: sortOrder.value,
             index: currentPage,
-            pageSize
+            pageSize: pageSize
           })
         })
+        console.debug('res', res)
         const result = res.data.userList.map(item => {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss')
           item.lastLoginTime = Utils.timeFormat(new Date(item.lastLoginTime), 'yyyy-MM-dd hh:mm:ss')
           return item
         })
-        console.log(result)
-        this.userListData = result
-        this.page.total = res.data.total
+        userListData.value = result
+        page.total = res.data.total
       } catch (err) {
+        console.error(err)
         message.error('加载用户列表失败')
       }
-    },
+    }
+    const {
+      sortCol,
+      sortOrder,
+      handleSortChange
+    } = useTableSort('username', 'ASC', load)
+    return {
+      roleList,
+      page,
+      breadcrumbList,
+      columns,
+      userListData,
+      editUserInfo,
+      userEditDialogType,
+      form,
+      showUserEditDialog,
+      sortCol,
+      sortOrder,
+      handleSortChange,
+      labelCol,
+      wrapperCol,
+      load
+    }
+  },
+  methods: {
     /**
        * 搜索按钮回调
        * @return {void}
@@ -341,19 +346,6 @@ export default {
        */
     handleEditUpdate () {
       this.showUserEditDialog = false
-      this.load()
-    },
-    /**
-     * 排序更改回调
-     * @param params {Object} 参数
-     * @return {void}
-     */
-    handleSortChange (params) {
-      const { prop, order } = params
-      let sortOrder = ''
-      order === 'ascending' ? sortOrder = 'ASC' : sortOrder = 'DESC'
-      this.sortCol = prop
-      this.sortOrder = sortOrder
       this.load()
     }
   },

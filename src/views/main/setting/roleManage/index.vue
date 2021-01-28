@@ -81,81 +81,67 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RoleEditDialog from './RoleEditDialog'
+import { ref, reactive } from 'vue'
+import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'roleManage',
-  data () {
-    const page = {
-      currentPage: 1,
-      pageSize: 10,
-      total: 0,
-      list: [10, 20, 30, 40]
-    }
-    return {
-      page,
-      roleList: [], // 角色列表
-      breadcrumbList: [
-        {
-          label: '用户设置',
-          value: '1'
-        },
-        {
-          label: '角色管理',
-          value: '11'
-        }
-      ],
-      form: {
-        roleName: '',
-        roleId: '',
-        createTime: []
+  setup () {
+    const breadcrumbList = [
+      {
+        label: '用户设置',
+        value: '1'
       },
-      roleEditDialogType: 'add',
-      editRoleInfo: {},
-      showRoleEditDialog: false, // 显示编辑角色弹框
-      sortCol: 'roleId',
-      sortOrder: 'ASC',
-      columns: [
-        {
-          title: '角色名',
-          dataIndex: 'roleName',
-          key: 'roleName',
-          fixed: 'left'
-        },
-        {
-          title: '角色id',
-          dataIndex: 'roleId',
-          key: 'roleId',
-          fixed: 'left'
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'createTime',
-          key: 'createTime'
-        },
-        {
-          title: '角色描述',
-          dataIndex: 'description',
-          key: 'description'
-        },
-        {
-          title: '操作',
-          key: 'action',
-          fixed: 'right',
-          slots: { customRender: 'action' }
-        }
-      ]
-    }
-  },
-  methods: {
-    /**
-     * 加载列表数据
-     * @return {void}
-     */
-    async load () {
-      const { roleName, roleId, createTime } = this.form
-      const { currentPage, pageSize } = this.page
+      {
+        label: '角色管理',
+        value: '11'
+      }
+    ]
+    const columns = [
+      {
+        title: '角色名',
+        dataIndex: 'roleName',
+        key: 'roleName',
+        fixed: 'left'
+      },
+      {
+        title: '角色id',
+        dataIndex: 'roleId',
+        key: 'roleId',
+        fixed: 'left'
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime'
+      },
+      {
+        title: '角色描述',
+        dataIndex: 'description',
+        key: 'description'
+      },
+      {
+        title: '操作',
+        key: 'action',
+        fixed: 'right',
+        slots: { customRender: 'action' }
+      }
+    ]
+    const { page } = usePage()
+    const roleList = ref([])
+    const form = reactive({
+      roleName: '',
+      roleId: '',
+      createTime: []
+    })
+    const roleEditDialogType = ref('add')
+    const editRoleInfo = ref({})
+    const showRoleEditDialog = ref(false)
+    const load = async () => {
+      const { roleName, roleId, createTime } = form
+      const { currentPage, pageSize } = page
       const createTimeList = []
       if (createTime && createTime.length === 2) {
-        createTime.map(item => {
+        createTime.forEach(item => {
           const date = new Date(item)
           if (date !== new Date(null)) {
             createTimeList.push(Utils.timeFormat(date, 'yyyy-MM-dd hh:mm:ss'))
@@ -168,8 +154,8 @@ export default {
             roleId,
             roleName,
             createTime: createTimeList.join(','),
-            orderName: this.sortCol,
-            orderType: this.sortOrder,
+            orderName: sortCol.value,
+            orderType: sortOrder.value,
             index: currentPage,
             pageSize
           })
@@ -178,12 +164,33 @@ export default {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
           return item
         })
-        this.roleList = result
-        this.page.total = res.data.total
+        roleList.value = result
+        page.total = res.data.total
       } catch (err) {
         message.error('加载列表数据失败！')
       }
-    },
+    }
+    const {
+      sortCol,
+      sortOrder,
+      handleSortChange
+    } = useTableSort('roleId', 'ASC', load)
+    return {
+      breadcrumbList,
+      page,
+      roleList,
+      form,
+      roleEditDialogType,
+      editRoleInfo,
+      showRoleEditDialog,
+      columns,
+      load,
+      sortCol,
+      sortOrder,
+      handleSortChange
+    }
+  },
+  methods: {
     /**
      * 搜索按钮回调
      * @return {void}
@@ -238,19 +245,6 @@ export default {
      */
     handleEditUpdate () {
       this.showUserEditDialog = false
-      this.load()
-    },
-    /**
-     * 排序更改回调
-     * @param params {Object} 参数
-     * @return {void}
-     */
-    handleSortChange (params) {
-      const { prop, order } = params
-      let sortOrder = ''
-      order === 'ascending' ? (sortOrder = 'ASC') : (sortOrder = 'DESC')
-      this.sortCol = prop
-      this.sortOrder = sortOrder
       this.load()
     },
     /**

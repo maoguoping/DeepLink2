@@ -41,7 +41,7 @@ export default {
     'header-bar': HeaderBar
   },
   mounted () {
-    var app = this
+    const app = this
     console.log('mainview', this)
     this.$eventbus.$on('docChangeTo', function (e) {
       app.mainPath = '1000'

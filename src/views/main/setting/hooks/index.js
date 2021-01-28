@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
@@ -19,5 +19,33 @@ export const useRoleListDic = function () {
   return {
     roleList,
     getRoleListDic
+  }
+}
+export const usePage = function () {
+  const page = reactive({
+    currentPage: 1,
+    pageSize: 10,
+    total: 0,
+    list: [10, 20, 30, 40]
+  })
+  return {
+    page
+  }
+}
+export const useTableSort = function (colName, order, cb) {
+  const sortCol = ref(colName)
+  const sortOrder = ref(order)
+  const handleSortChange = (params) => {
+    const { prop, order } = params
+    let sortOrder = ''
+    order === 'ascending' ? sortOrder = 'ASC' : sortOrder = 'DESC'
+    sortCol.value = prop
+    sortOrder.value = sortOrder
+    cb()
+  }
+  return {
+    sortCol,
+    sortOrder,
+    handleSortChange
   }
 }

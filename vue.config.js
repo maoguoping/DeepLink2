@@ -175,7 +175,10 @@ module.exports = {
             format: ' build [:bar]' + chalk.green.bold(':precent') + ':elapsed second',
             clear: false
           }),
-          new webpack.IgnorePlugin(/\.\/locale/, /moment/),
+          new webpack.IgnorePlugin({
+            resourceRegExp: /^\.\/locale$/,
+            contextRegExp: /moment$/
+          }),
           new CompressionPlugin({
             test: /\.js$|\.html$|\.css/,
             // 匹配文件名

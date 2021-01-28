@@ -87,94 +87,82 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RightEditDialog from './RightEditDialog'
+import { ref, reactive } from 'vue'
+import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'rightManage',
-  data () {
+  setup () {
+    const breadcrumbList = [
+      {
+        label: '用户设置',
+        value: '1'
+      },
+      {
+        label: '权限管理',
+        value: '12'
+      }
+    ]
+    const columns = [
+      {
+        title: '权限名称',
+        dataIndex: 'rightName',
+        key: 'rightName',
+        fixed: 'left'
+      },
+      {
+        title: '权限id',
+        dataIndex: 'rightId',
+        key: 'rightId',
+        fixed: 'left'
+      },
+      {
+        title: '权限路径',
+        dataIndex: 'path',
+        key: 'path'
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime'
+      },
+      {
+        title: '权限描述',
+        key: 'description',
+        dataIndex: 'description'
+      },
+      {
+        title: '操作',
+        key: 'action',
+        fixed: 'right',
+        slots: { customRender: 'action' }
+      }
+    ]
+    const { page } = usePage()
+    const selectList = ref([])
+    const rightList = ref([])
+    const rightEditDialogType = ref('add')
+    const editRightInfo = ref({})
+    const showRightEditDialog = ref(false)
+    const form = reactive({
+      rightName: '',
+      rightId: '',
+      createTime: []
+    })
+    const handleSelectionChange = (list) => {
+      selectList.value = list
+    }
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
-        this.handleSelectionChange(selectedRows)
+        handleSelectionChange(selectedRows)
       }
     }
-    const page = {
-      currentPage: 1,
-      pageSize: 10,
-      total: 0,
-      list: [10, 20, 30, 40]
-    }
-    return {
-      rowSelection,
-      page,
-      rightList: [], // 角色列表
-      breadcrumbList: [
-        {
-          label: '用户设置',
-          value: '1'
-        },
-        {
-          label: '权限管理',
-          value: '12'
-        }
-      ],
-      form: {
-        rightName: '',
-        rightId: '',
-        createTime: []
-      },
-      rightEditDialogType: 'add',
-      editRightInfo: {},
-      showRightEditDialog: false, // 显示编辑角色弹框
-      sortCol: 'rightId',
-      sortOrder: 'ASC',
-      selectList: [],
-      columns: [
-        {
-          title: '权限名称',
-          dataIndex: 'rightName',
-          key: 'rightName',
-          fixed: 'left'
-        },
-        {
-          title: '权限id',
-          dataIndex: 'rightId',
-          key: 'rightId',
-          fixed: 'left'
-        },
-        {
-          title: '权限路径',
-          dataIndex: 'path',
-          key: 'path'
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'createTime',
-          key: 'createTime'
-        },
-        {
-          title: '权限描述',
-          key: 'description',
-          dataIndex: 'description'
-        },
-        {
-          title: '操作',
-          key: 'action',
-          fixed: 'right',
-          slots: { customRender: 'action' }
-        }
-      ]
-    }
-  },
-  methods: {
-    /**
-     * 加载列表数据
-     * @return {void}
-     */
-    async load () {
-      const { rightName, rightId, createTime } = this.form
-      const { currentPage, pageSize } = this.page
+    const load = async () => {
+      const { rightName, rightId, createTime } = form
+      const { currentPage, pageSize } = page
       const createTimeList = []
       if (createTime && createTime.length === 2) {
-        createTime.map(item => {
+        createTime.forEach(item => {
           const date = new Date(item)
           if (date !== new Date(null)) {
             createTimeList.push(Utils.timeFormat(date, 'yyyy-MM-dd hh:mm:ss'))
@@ -188,8 +176,8 @@ export default {
             rightId: rightId,
             rightName: rightName,
             createTime: createTimeList.join(','),
-            orderName: this.sortCol,
-            orderType: this.sortOrder,
+            orderName: sortCol.value,
+            orderType: sortOrder.value,
             index: currentPage,
             pageSize
           })
@@ -198,13 +186,37 @@ export default {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
           return item
         })
-        this.rightList = result
-        this.page.total = res.data.total
-        this.selectList = []
+        rightList.value = result
+        page.total = res.data.total
+        selectList.value = []
       } catch (err) {
         message.error(' 加载列表数据失败！')
       }
-    },
+    }
+    const {
+      sortCol,
+      sortOrder,
+      handleSortChange
+    } = useTableSort('rightId', 'ASC', load)
+    return {
+      page,
+      rowSelection,
+      selectList,
+      rightList,
+      breadcrumbList,
+      rightEditDialogType,
+      editRightInfo,
+      form,
+      columns,
+      showRightEditDialog,
+      handleSelectionChange,
+      sortCol,
+      sortOrder,
+      handleSortChange,
+      load
+    }
+  },
+  methods: {
     /**
      * 搜索按钮回调
      * @return {void}
@@ -263,19 +275,6 @@ export default {
       this.load()
     },
     /**
-     * 排序更改回调
-     * @param params {Object} 参数
-     * @return {void}
-     */
-    handleSortChange (params) {
-      const { prop, order } = params
-      let sortOrder = ''
-      order === 'ascending' ? (sortOrder = 'ASC') : (sortOrder = 'DESC')
-      this.sortCol = prop
-      this.sortOrder = sortOrder
-      this.load()
-    },
-    /**
      * 新增权限弹窗回调
      * @return {void}
      */
@@ -318,14 +317,6 @@ export default {
         message.success('修改权限成功')
       }
       this.searchFun()
-    },
-    /**
-     * 多选回调
-     * @param {array} list 成功关闭类别
-     * @return {void}
-     */
-    handleSelectionChange (list) {
-      this.selectList = list
     }
   },
   mounted () {
