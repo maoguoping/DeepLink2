@@ -37,10 +37,10 @@ module.exports = {
       }
     }
     // 移除 prefetch 插件
-    config.plugin('preload').tap(args => {
-      args[0].fileBlacklist.push(/runtime~.+\.js$/) //正则匹配runtime文件名，去除该文件的preload
-      return args
-    })
+    // config.plugin('preload').tap(args => {
+    //   args[0].fileBlacklist.push(/runtime~.+\.js$/) //正则匹配runtime文件名，去除该文件的preload
+    //   return args
+    // })
     config.plugins.delete('prefetch')
     
     config.optimization.splitChunks({
