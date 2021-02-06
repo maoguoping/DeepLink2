@@ -73,10 +73,10 @@ export default {
     width: 100%;
     margin: 0 auto;
     position: absolute;
-    top: 122px;
+    top: 118px;
     bottom: 0px;
     left: auto;
-    background: #f6f6f6;
+    background: #f0f2f5;
     //中心布局
     .wrapper-main {
       width: 1024px;

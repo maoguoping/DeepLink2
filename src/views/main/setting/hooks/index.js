@@ -21,15 +21,26 @@ export const useRoleListDic = function () {
     getRoleListDic
   }
 }
-export const usePage = function () {
+export const usePage = function (cb) {
   const page = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 0,
     list: [10, 20, 30, 40]
   })
+  const handleSizeChange = (val) => {
+    page.pageSize = val
+    page.currentPage = 1
+    cb()
+  }
+  const handleCurrentChange = (val) => {
+    page.currentPage = val
+    cb()
+  }
   return {
-    page
+    page,
+    handleSizeChange,
+    handleCurrentChange
   }
 }
 export const useTableSort = function (colName, order, cb) {

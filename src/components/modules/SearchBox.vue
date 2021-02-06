@@ -36,7 +36,7 @@ export default {
       const num = items.length
       const boxWidth = this.$el.querySelector('.main').offsetWidth
       const itemWidth = this.$el.querySelector('.search-box-item').offsetWidth
-      const maxNum = (itemWidth === 0) ? 0 : Math.floor(boxWidth / itemWidth)
+      const maxNum = (itemWidth === 0) ? 0 : Math.floor(boxWidth / itemWidth) + 1
       if (num <= maxNum) {
         this.showFolder = false
       } else {
@@ -69,7 +69,6 @@ export default {
   padding:20px 20px 5px 20px;
   width: 100%;
   border: 1px solid #eee;
-  border-radius: 4px;
   background-color: #fff;
   .main{
     .slide-enter-active,.slide-leave-active{
@@ -77,13 +76,13 @@ export default {
     }
   }
   .folder{
-    margin-top: -15px;
+    margin-top: 15px;
     .less-view{
       height: 30px;
       line-height: 30px;
     }
     .more-line,.less-line{
-      text-align: center;
+      text-align: right;
       font-size: 12px;
       cursor:pointer;
       color: #8cc5ff;

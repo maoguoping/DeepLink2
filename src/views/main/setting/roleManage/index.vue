@@ -1,87 +1,154 @@
 <template>
   <div class="roleManage">
     <a-breadcrumb separator-class="a-icon-arrow-right">
-      <a-breadcrumb-item v-for="item in breadcrumbList" :key="item.value">{{item.label}}</a-breadcrumb-item>
+      <a-breadcrumb-item
+        :key="item.value"
+        v-for="item in breadcrumbList"
+      >{{item.label}}</a-breadcrumb-item>
     </a-breadcrumb>
     <SearchBox>
       <template v-slot:main>
-        <a-form ref="registerForm" :model="form" layout="inline" @submit.prevent>
-          <a-form-item label="角色名" name="username" class="search-box-item">
-            <a-input v-model:value="form.roleName" style="width: 210px"></a-input>
+        <a-form
+          :model="form"
+          @submit.prevent
+          layout="inline"
+          ref="registerForm"
+          :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  :labelAlign="right"
+        >
+          <a-form-item
+            class="search-box-item"
+            label="角色名"
+            name="username"
+          >
+            <a-input
+              style="width: 80%"
+              v-model:value="form.roleName"
+            ></a-input>
           </a-form-item>
-          <a-form-item label="角色id" name="userTickName" class="search-box-item">
-            <a-input v-model:value="form.roleId" style="width: 210px"></a-input>
+          <a-form-item
+            class="search-box-item"
+            label="角色id"
+            name="userTickName"
+          >
+            <a-input
+              style="width: 80%"
+              v-model:value="form.roleId"
+            ></a-input>
           </a-form-item>
-          <a-form-item label="创建日期" name="createTime" class="search-box-item">
+          <a-form-item
+            class="search-box-item"
+            label="创建日期"
+            name="createTime"
+          >
             <a-range-picker
-              v-model:value="form.createTime"
               format="yyyy/MM/dd"
-              style="width: 240px"
-            >
-            </a-range-picker>
+              style="width: 80%"
+              v-model:value="form.createTime"
+            ></a-range-picker>
           </a-form-item>
-          <a-form-item label prop class="search-box-item search-btn">
-            <a-button type="ghost" @click="resetFun" style="width: 80px;padding: 10px">重置条件</a-button>
-            <a-button type="primary" @click="searchFun" style="width: 185px">搜索</a-button>
-          </a-form-item>
+          <div
+            class="search-btn-box search-box-item"
+          >
+            <a-button class="search" type="primary" @click="searchFun" >搜索</a-button>
+            <a-button class="reset" type="default" @click="resetFun" >重置条件</a-button>
+          </div>
         </a-form>
       </template>
     </SearchBox>
     <div class="btn-box">
-       <a-button type="primary" @click="handleAddRole">
-        <template #icon><PlusOutlined /></template>新增
+      <a-button
+        @click="handleAddRole"
+        type="primary"
+        shape="round"
+      >
+        <template #icon>
+          <PlusOutlined />
+        </template>新增
       </a-button>
     </div>
     <a-table
-      ref="multipleTable"
-      :data-source="roleList"
       :columns="columns"
+      :data-source="roleList"
       :pagination="false"
-      style="width: 100%"
-      class="multipleTable"
-      childrenColumnName="childrenRow"
+      :loading="loading"
       @sort-change="handleSortChange"
+      childrenColumnName="childrenRow"
+      class="multipleTable"
+      ref="multipleTable"
       rowKey="roleId"
+      style="width: 100%"
     >
-      <template type="selection" width="55"></template>
-      <template name="roleName" width="120"></template>
-      <template name="roleId"  sortable="custom" width="90"></template>
-      <template name="createTime"  width="170" sortable="custom"></template>
-      <template name="description" ></template>
-      <template name="action" fixed="right" width="90" #action="{ record }">
-        <a-button size="small" type="primary" @click="handleEdit(record)">编辑</a-button>
+      <template
+        type="selection"
+        width="55"
+      ></template>
+      <template
+        name="roleName"
+        width="120"
+      ></template>
+      <template
+        name="roleId"
+        sortable="custom"
+        width="90"
+      ></template>
+      <template
+        name="createTime"
+        sortable="custom"
+        width="170"
+      ></template>
+      <template name="description"></template>
+      <template
+        #action="{ record }"
+        fixed="right"
+        name="action"
+        width="90"
+      >
+        <a-button
+          @click="handleEdit(record)"
+          size="small"
+          type="primary"
+        >编辑</a-button>
       </template>
     </a-table>
-    <div class="pagination-box" v-if="roleList.length>0">
+    <div
+      class="pagination-box"
+      v-if="roleList.length>0"
+    >
       <a-pagination
-        @showSizeChange="handleSizeChange"
-        @change="handleCurrentChange"
+        :total="page.total"
         :v-model:current="page.currentPage"
-        v-model:pageSize="page.pageSize"
+        @change="handleCurrentChange"
+        @showSizeChange="handleSizeChange"
+        background
         showQuickJumper
         showSizeChanger
-        background
-        :total="page.total"
+        v-model:pageSize="page.pageSize"
       ></a-pagination>
     </div>
     <RoleEditDialog
-      v-model="showRoleEditDialog"
-      :type="roleEditDialogType"
       :data="editRoleInfo"
+      :type="roleEditDialogType"
       @update="editConfirm"
+      v-model="showRoleEditDialog"
     ></RoleEditDialog>
   </div>
 </template>
 
 <script>
 import Utils from '@/lib/utils.js'
-import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
+import {
+  message,
+  Table,
+  Pagination,
+  Breadcrumb,
+  DatePicker
+} from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RoleEditDialog from './RoleEditDialog'
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'roleManage',
@@ -126,17 +193,74 @@ export default {
         slots: { customRender: 'action' }
       }
     ]
-    const { page } = usePage()
+    const { page, handleSizeChange, handleCurrentChange } = usePage(load)
     const roleList = ref([])
     const form = reactive({
       roleName: '',
       roleId: '',
       createTime: []
     })
+    /**
+     * 搜索按钮回调
+     */
+    const searchFun = () => {
+      page.currentPage = 1
+      load()
+    }
+    /**
+     * 重置条件
+     */
+    const resetFun = () => {
+      form.username = ''
+      form.userId = ''
+      form.userTickName = ''
+      form.roleId = ''
+      form.createTime = []
+      form.lastLoginTime = []
+    }
     const roleEditDialogType = ref('add')
     const editRoleInfo = ref({})
     const showRoleEditDialog = ref(false)
-    const load = async () => {
+    /**
+     * 修改用户信息
+     */
+    const handleEdit = (row) => {
+      roleEditDialogType.value = 'edit'
+      editRoleInfo.value = row
+      console.log(row)
+      showRoleEditDialog.value = true
+    }
+    /**
+     * 修改用户信息成功回调
+     */
+    const handleEditUpdate = () => {
+      showRoleEditDialog.value = false
+      load()
+    }
+    /**
+     * 新增角色弹窗回调
+     */
+    const handleAddRole = () => {
+      roleEditDialogType.value = 'add'
+      showRoleEditDialog.value = true
+    }
+    /**
+     * 弹窗确定回调
+     */
+    const editConfirm = (type) => {
+      showRoleEditDialog.value = false
+      if (type === 'add') {
+        message.success('新增角色成功')
+      } else {
+        message.success('修改角色成功')
+      }
+      searchFun()
+    }
+    const loading = ref(false)
+    /**
+     * 加载数据函数
+     */
+    async function load () {
       const { roleName, roleId, createTime } = form
       const { currentPage, pageSize } = page
       const createTimeList = []
@@ -149,6 +273,7 @@ export default {
         })
       }
       try {
+        loading.value = true
         const res = await $axios.post($api.setting.getRoleList, {
           searchData: JSON.stringify({
             roleId,
@@ -161,23 +286,34 @@ export default {
           })
         })
         const result = res.data.list.map(item => {
-          item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
+          item.createTime =
+            Utils.timeFormat(
+              new Date(item.createTime),
+              'yyyy-MM-dd hh:mm:ss'
+            ) || ''
           return item
         })
         roleList.value = result
         page.total = res.data.total
+        loading.value = false
       } catch (err) {
+        loading.value = false
         message.error('加载列表数据失败！')
       }
     }
-    const {
-      sortCol,
-      sortOrder,
-      handleSortChange
-    } = useTableSort('roleId', 'ASC', load)
+    const { sortCol, sortOrder, handleSortChange } = useTableSort(
+      'roleId',
+      'ASC',
+      load
+    )
+    onMounted(() => {
+      load()
+    })
     return {
       breadcrumbList,
       page,
+      handleSizeChange,
+      handleCurrentChange,
       roleList,
       form,
       roleEditDialogType,
@@ -187,91 +323,15 @@ export default {
       load,
       sortCol,
       sortOrder,
-      handleSortChange
+      loading,
+      handleSortChange,
+      searchFun,
+      resetFun,
+      handleEdit,
+      handleEditUpdate,
+      handleAddRole,
+      editConfirm
     }
-  },
-  methods: {
-    /**
-     * 搜索按钮回调
-     * @return {void}
-     */
-    searchFun () {
-      this.page.currentPage = 1
-      this.load()
-    },
-    resetFun () {
-      this.form = {
-        username: '',
-        userId: '',
-        userTickName: '',
-        roleId: '',
-        createTime: [],
-        lastLoginTime: []
-      }
-    },
-    /**
-     * 分页页面size变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleSizeChange (val) {
-      this.page.pageSize = val
-      this.page.currentPage = 1
-      this.searchFun()
-    },
-    /**
-     * 分页页码变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleCurrentChange (val) {
-      this.page.currentPage = val
-      this.load()
-    },
-    /**
-     * 分页页码变化回调
-     * @param {Object} row 行数据
-     * @return {void}
-     */
-    handleEdit (row) {
-      this.roleEditDialogType = 'edit'
-      this.editRoleInfo = row
-      console.log(row)
-      this.showRoleEditDialog = true
-    },
-    /**
-     * 修改用户信息成功回调
-     * @return {void}
-     */
-    handleEditUpdate () {
-      this.showUserEditDialog = false
-      this.load()
-    },
-    /**
-     * 新增角色弹窗回调
-     * @return {void}
-     */
-    handleAddRole () {
-      this.roleEditDialogType = 'add'
-      this.showRoleEditDialog = true
-    },
-    /**
-     * 弹窗确定回调
-     * @param {string} type 成功关闭类别
-     * @return {void}
-     */
-    editConfirm (type) {
-      this.showRoleEditDialog = false
-      if (type === 'add') {
-        message.success('新增角色成功')
-      } else {
-        message.success('修改角色成功')
-      }
-      this.searchFun()
-    }
-  },
-  mounted () {
-    this.load()
   },
   components: {
     SearchBox,
@@ -290,8 +350,20 @@ export default {
 .roleManage {
   height: 100%;
   .search-box {
-    .search-btn {
-      padding-left: 30px;
+    .search-btn-box {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      .search {
+        width: 185px;
+        margin-right: 20px;
+      }
+      .reset {
+        width: 80px;
+      }
+    }
+    .search-box-item {
+      width: 365px;
     }
   }
   .btn-box {

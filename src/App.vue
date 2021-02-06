@@ -10,7 +10,7 @@ export default {
 }
 </script>
 <style lang="scss" type="text/scss">
-    @import "assets/css/base.css";
+    @import "assets/css/base.scss";
 
     html {
         /*overflow: hidden;*/

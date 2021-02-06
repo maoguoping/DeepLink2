@@ -1,6 +1,6 @@
 <template>
     <a-layout class="mangerCenter">
-        <a-layout-header class="mangerCenterHeader " style="height: 30px;background-color: #f6f6f6">
+        <a-layout-header class="mangerCenterHeader " style="height: 30px;background-color: #f0f2f5">
             <PathBar ref="pathBar" :beforeChange="beforePathChange" @path-link-to="pathLinkTo"></PathBar>
         </a-layout-header>
         <a-layout-content class="mangerCenterMain">
@@ -384,7 +384,7 @@ export default {
           margin-bottom: 20px;
           display: flex;
           justify-content: space-between;
-          background-color: #f6f6f6;
+          background-color: #f0f2f5;
             .ant-row{
               .ant-btn {
                 margin-right: 20px;

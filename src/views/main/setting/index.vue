@@ -1,10 +1,10 @@
 <template>
   <a-layout class="setting">
-    <a-layout-header class="settingHeader " style="height: 30px;background-color: #f6f6f6">
+    <a-layout-header class="settingHeader " style="height: 30px;background-color: #f0f2f5">
       设置菜单
     </a-layout-header>
     <a-layout>
-      <a-layout-sider style="width: 220px;background-color: #f6f6f6">
+      <a-layout-sider style="width: 200px;background-color: #f0f2f5">
         <a-menu
           mode="inline"
           class="a-menu-vertical-demo"
@@ -28,7 +28,7 @@
               <i class="iconfont icon-control"></i>
               <span class="memu-text">系统设置</span>
             </template>
-            <a-menu-item-group key="2-">>
+            <a-menu-item-group key="2-">
               <a-menu-item key="2-1" @click="handleClick('2-1')">通知管理</a-menu-item>
             </a-menu-item-group>
           </a-sub-menu>
@@ -110,6 +110,7 @@ export default {
     border: none;
     padding-top: 0px;
     padding-bottom: 0px;
+    padding-left: 20px;
     /*overflow-y: scroll;*/
   }
 

@@ -6,6 +6,7 @@
       :columns="columns"
       :pagination="false"
       :row-selection="rowSelection"
+      :loading="loading"
       childrenColumnName="childrenRow"
       class="multipleTable"
       rowKey="id"
@@ -121,7 +122,8 @@ export default {
           key: 'action',
           slots: { customRender: 'action' }
         }
-      ]
+      ],
+      loading: false
     }
   },
   computed: {
@@ -239,6 +241,7 @@ export default {
     async loadViewData () {
       const pathId = this.pathId || ''
       try {
+        this.loading = true
         const res = await $axios.post($api.manageCenter.getViewDataByPathId, {
           pathId: pathId,
           pageInfo: JSON.stringify({
@@ -262,7 +265,9 @@ export default {
           viewType: 'listView',
           viewDescription: res.data.listDescription
         })
+        this.loading = false
       } catch (err) {
+        this.loading = false
         message.error('加载数据错误')
       }
     },

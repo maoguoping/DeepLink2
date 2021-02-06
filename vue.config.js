@@ -10,7 +10,8 @@ const ProgressBarPlugin = require('progress-bar-webpack-plugin')
 const cdn = {
   js: [
     'https://cdn.jsdelivr.net/npm/vue@3.0.5/dist/vue.global.min.js',
-    'https://cdn.jsdelivr.net/npm/vuex@4.0.0-rc.2/dist/vuex.global.min.js',
+    'https://cdn.jsdelivr.net/npm/vuex@4.0.0/dist/vuex.global.min.js',
+    'https://cdn.jsdelivr.net/npm/vue-router@4.0.3/dist/vue-router.global.min.js',
     'https://cdn.jsdelivr.net/npm/vue-lazyload@1.3.3/vue-lazyload.min.js',
     'https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js'
   ]
@@ -149,13 +150,9 @@ module.exports = {
         vue: 'Vue',
         vuex: 'Vuex',
         'vue-lazyload': 'VueLazyload',
+        'vue-router': 'VueRouter',
         axios: 'axios'
       }
-      config.optimization.minimizer.map((arg) => {
-        const option = arg.options.terserOptions.compress
-        option.drop_console = true // 打开开关
-        return arg
-      })
       return {
         module: {
           rules: [
@@ -213,8 +210,6 @@ module.exports = {
     }
   },
   css: {
-  // 是否使用css分离插件 ExtractTextPlugin
-    extract: false,
     // 开启 CSS source maps?
     sourceMap: false,
     // css预设器配置项

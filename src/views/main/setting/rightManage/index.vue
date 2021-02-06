@@ -5,48 +5,49 @@
     </a-breadcrumb>
     <SearchBox>
       <template v-slot:main>
-        <a-form ref="registerForm" :model="form" layout="inline" @submit.prevent>
+        <a-form ref="registerForm" :model="form" layout="inline" @submit.prevent :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  :labelAlign="right">
           <a-form-item label="权限名" name="rightName" class="search-box-item">
-            <a-input v-model:value="form.rightName" style="width: 210px"></a-input>
+            <a-input v-model:value="form.rightName" style="width: 80%"></a-input>
           </a-form-item>
           <a-form-item label="权限id" name="rightId" class="search-box-item">
-            <a-input v-model:value="form.rightId" style="width: 210px"></a-input>
+            <a-input v-model:value="form.rightId" style="width: 80%"></a-input>
           </a-form-item>
           <a-form-item label="创建日期" name="createTime" class="search-box-item">
             <a-range-picker
               v-model:value="form.createTime"
               format="yyyy/MM/dd"
-              style="width: 240px"
+              style="width: 80%"
             >
             </a-range-picker>
           </a-form-item>
-          <a-form-item label prop class="search-box-item search-btn">
-            <a-button type="ghost" @click="resetFun" style="width: 80px;padding: 10px">重置条件</a-button>
-            <a-button type="primary" @click="searchFun" style="width: 185px">搜索</a-button>
-          </a-form-item>
+          <div class="search-btn-box search-box-item">
+            <a-button class="search" type="primary" @click="searchFun" >搜索</a-button>
+            <a-button class="reset" type="default" @click="resetFun" >重置条件</a-button>
+          </div>
         </a-form>
       </template>
     </SearchBox>
     <div class="btn-box">
-      <a-button type="primary" @click="handleAddRight">
+      <a-button type="primary" @click="handleAddRight" shape="round" class="edit">
         <template #icon><PlusOutlined /></template>新增
       </a-button>
-      <a-button type="danger" @click="handleDelRight">
+      <a-button type="danger" @click="handleDelRight" shape="round">
         <template #icon><DeleteOutlined /></template>删除
       </a-button>
     </div>
     <a-table
       ref="multipleTable"
+      rowKey="rightId"
+      style="width: 100%"
+      class="multipleTable"
+      childrenColumnName="childrenRow"
       :data-source="rightList"
       :columns="columns"
       :pagination="false"
-      style="width: 100%"
-      class="multipleTable"
-      :row-selection="rowSelection"
-      childrenColumnName="childrenRow"
-      @sort-change="handleSortChange"
       :scroll="{ x: 1200 }"
-      rowKey="rightId"
+      :loading="loading"
+      :row-selection="rowSelection"
+      @sort-change="handleSortChange"
     >
       <!-- <template type="selection" width="55"></template> -->
       <template name="rightName"  sortable width="120"></template>
@@ -87,7 +88,7 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RightEditDialog from './RightEditDialog'
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'rightManage',
@@ -102,6 +103,48 @@ export default {
         value: '12'
       }
     ]
+    const { page, handleSizeChange, handleCurrentChange } = usePage(load)
+    const rightList = ref([])
+    const rightEditDialogType = ref('add')
+    const editRightInfo = ref({})
+    const showRightEditDialog = ref(false)
+    /**
+     * 表格选中项
+     */
+    const selectList = ref([])
+    /**
+     * 新增权限弹窗回调
+     * @return {void}
+     */
+    const handleAddRight = () => {
+      rightEditDialogType.value = 'add'
+      showRightEditDialog.value = true
+    }
+    /**
+     * 删除权限回调
+     * @return {void}
+     */
+    const handleDelRight = async () => {
+      if (selectList.value.length === 0) {
+        message.warning('请选择权限')
+        return
+      }
+      const ids = selectList.value.map(i => i.rightId)
+      try {
+        await $axios.post($api.setting.deleteRight, {
+          rightInfo: JSON.stringify({
+            rightId: ids.join(',')
+          })
+        })
+        message.success('删除权限成功')
+        load()
+      } catch (err) {
+        message.error('删除权限失败')
+      }
+    }
+    /**
+     * 表格行定义
+     */
     const columns = [
       {
         title: '权限名称',
@@ -137,27 +180,68 @@ export default {
         slots: { customRender: 'action' }
       }
     ]
-    const { page } = usePage()
-    const selectList = ref([])
-    const rightList = ref([])
-    const rightEditDialogType = ref('add')
-    const editRightInfo = ref({})
-    const showRightEditDialog = ref(false)
-    const form = reactive({
-      rightName: '',
-      rightId: '',
-      createTime: []
-    })
+    /**
+     * 表格选中事件
+     */
     const handleSelectionChange = (list) => {
       selectList.value = list
     }
+    /**
+     * 表格选中定义
+     */
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
         handleSelectionChange(selectedRows)
       }
     }
-    const load = async () => {
+    /**
+     * 表格排序
+     */
+    const {
+      sortCol,
+      sortOrder,
+      handleSortChange
+    } = useTableSort('rightId', 'ASC', load)
+    const form = reactive({
+      rightName: '',
+      rightId: '',
+      createTime: []
+    })
+    /**
+     * 搜索框清空
+     */
+    const resetFun = () => {
+      form.rightName = ''
+      form.rightId = ''
+      form.createTime = []
+    }
+    /**
+     * 搜索按钮回调
+     */
+    const searchFun = () => {
+      page.currentPage = 1
+      load()
+    }
+    /**
+     * 弹窗确定回调
+     * @param {string} type 成功关闭类别
+     * @return {void}
+     */
+    const editConfirm = (type) => {
+      showRightEditDialog.value = false
+      if (type === 'new') {
+        message.success('新增权限成功')
+      } else {
+        message.success('修改权限成功')
+      }
+      searchFun()
+    }
+    const loading = ref(false)
+    /**
+     * 加载函数
+     */
+    async function load () {
       const { rightName, rightId, createTime } = form
       const { currentPage, pageSize } = page
       const createTimeList = []
@@ -171,6 +255,7 @@ export default {
       }
       console.log('请求接口')
       try {
+        loading.value = true
         const res = await $axios.post($api.setting.getRightList, {
           searchData: JSON.stringify({
             rightId: rightId,
@@ -189,17 +274,17 @@ export default {
         rightList.value = result
         page.total = res.data.total
         selectList.value = []
+        loading.value = false
       } catch (err) {
+        loading.value = false
         message.error(' 加载列表数据失败！')
       }
     }
-    const {
-      sortCol,
-      sortOrder,
-      handleSortChange
-    } = useTableSort('rightId', 'ASC', load)
+    onMounted(() => { load() })
     return {
       page,
+      handleSizeChange,
+      handleCurrentChange,
       rowSelection,
       selectList,
       rightList,
@@ -213,114 +298,13 @@ export default {
       sortCol,
       sortOrder,
       handleSortChange,
-      load
+      load,
+      searchFun,
+      resetFun,
+      handleAddRight,
+      handleDelRight,
+      editConfirm
     }
-  },
-  methods: {
-    /**
-     * 搜索按钮回调
-     * @return {void}
-     */
-    searchFun () {
-      console.log(this.form)
-      this.page.currentPage = 1
-      this.load()
-    },
-    resetFun () {
-      this.form = {
-        username: '',
-        userId: '',
-        userTickName: '',
-        rightId: '',
-        createTime: [],
-        lastLoginTime: []
-      }
-    },
-    /**
-     * 分页页面size变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleSizeChange (val) {
-      this.page.pageSize = val
-      this.page.currentPage = 1
-      this.searchFun()
-    },
-    /**
-     * 分页页码变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleCurrentChange (val) {
-      this.page.currentPage = val
-      this.load()
-    },
-    /**
-     * 分页页码变化回调
-     * @param {Object} row 行数据
-     * @return {void}
-     */
-    handleEdit (row) {
-      this.rightEditDialogType = 'edit'
-      this.editRightInfo = row
-      console.log(row)
-      this.showRightEditDialog = true
-    },
-    /**
-     * 修改用户信息成功回调
-     * @return {void}
-     */
-    handleEditUpdate () {
-      this.showUserEditDialog = false
-      this.load()
-    },
-    /**
-     * 新增权限弹窗回调
-     * @return {void}
-     */
-    handleAddRight () {
-      this.rightEditDialogType = 'add'
-      this.showRightEditDialog = true
-    },
-    /**
-     * 删除权限回调
-     * @return {void}
-     */
-    async handleDelRight () {
-      if (this.selectList.length === 0) {
-        message.warning('请选择权限')
-        return
-      }
-      const ids = this.selectList.map(i => i.rightId)
-      try {
-        await $axios.post($api.setting.deleteRight, {
-          rightInfo: JSON.stringify({
-            rightId: ids.join(',')
-          })
-        })
-        message.success('删除权限成功')
-        this.load()
-      } catch (err) {
-        message.error('删除权限失败')
-      }
-    },
-    /**
-     * 弹窗确定回调
-     * @param {string} type 成功关闭类别
-     * @return {void}
-     */
-    editConfirm (type) {
-      this.showRightEditDialog = false
-      if (type === 'new') {
-        message.success('新增权限成功')
-      } else {
-        message.success('修改权限成功')
-      }
-      this.searchFun()
-    }
-  },
-  mounted () {
-    this.load()
   },
   components: {
     SearchBox,
@@ -340,12 +324,27 @@ export default {
 .rightManage {
   height: 100%;
   .search-box {
-    .search-btn {
-      padding-left: 30px;
+    .search-btn-box {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      .search {
+        width: 185px;
+        margin-right: 20px;
+      }
+      .reset {
+        width: 80px;
+      }
+    }
+    .search-box-item {
+      width: 365px;
     }
   }
   .btn-box {
     margin-bottom: 15px;
+    .edit {
+      margin-right: 10px;
+    }
   }
   .pagination-box {
     display: block;
