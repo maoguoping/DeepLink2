@@ -28,13 +28,14 @@ export const usePage = function (cb) {
     total: 0,
     list: [10, 20, 30, 40]
   })
-  const handleSizeChange = (val) => {
-    page.pageSize = val
+  const handleSizeChange = (current, size) => {
+    console.debug('切换size', current, size)
+    page.pageSize = size
     page.currentPage = 1
     cb()
   }
-  const handleCurrentChange = (val) => {
-    page.currentPage = val
+  const handleCurrentChange = (current) => {
+    page.currentPage = current
     cb()
   }
   return {

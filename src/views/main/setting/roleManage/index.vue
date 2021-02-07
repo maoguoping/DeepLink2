@@ -13,7 +13,7 @@
           @submit.prevent
           layout="inline"
           ref="registerForm"
-          :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  :labelAlign="right"
+          :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  labelAlign="right"
         >
           <a-form-item
             class="search-box-item"
@@ -148,7 +148,7 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RoleEditDialog from './RoleEditDialog'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, toRaw } from 'vue'
 import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'roleManage',
@@ -262,7 +262,7 @@ export default {
      */
     async function load () {
       const { roleName, roleId, createTime } = form
-      const { currentPage, pageSize } = page
+      const { currentPage, pageSize } = toRaw(page)
       const createTimeList = []
       if (createTime && createTime.length === 2) {
         createTime.forEach(item => {
@@ -372,7 +372,7 @@ export default {
   .pagination-box {
     display: block;
     text-align: center;
-    margin-top: 20px;
+    padding: 20px 0;
   }
 }
 </style>

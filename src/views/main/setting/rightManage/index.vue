@@ -5,7 +5,7 @@
     </a-breadcrumb>
     <SearchBox>
       <template v-slot:main>
-        <a-form ref="registerForm" :model="form" layout="inline" @submit.prevent :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  :labelAlign="right">
+        <a-form ref="registerForm" :model="form" layout="inline" @submit.prevent :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  labelAlign="right">
           <a-form-item label="权限名" name="rightName" class="search-box-item">
             <a-input v-model:value="form.rightName" style="width: 80%"></a-input>
           </a-form-item>
@@ -71,6 +71,7 @@
         :total="page.total"
       ></a-pagination>
     </div>
+    <a-back-top />
     <RightEditDialog
       v-model="showRightEditDialog"
       :type="rightEditDialogType"
@@ -81,14 +82,14 @@
 </template>
 
 <script>
-import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
+import { message, Table, Pagination, Breadcrumb, DatePicker, BackTop } from 'ant-design-vue'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import Utils from '@/lib/utils.js'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RightEditDialog from './RightEditDialog'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, toRaw } from 'vue'
 import { usePage, useTableSort } from '../hooks'
 export default {
   name: 'rightManage',
@@ -224,6 +225,15 @@ export default {
       load()
     }
     /**
+     * 修改用户信息
+     */
+    const handleEdit = (row) => {
+      rightEditDialogType.value = 'edit'
+      editRightInfo.value = row
+      console.log(row)
+      showRightEditDialog.value = true
+    }
+    /**
      * 弹窗确定回调
      * @param {string} type 成功关闭类别
      * @return {void}
@@ -243,7 +253,7 @@ export default {
      */
     async function load () {
       const { rightName, rightId, createTime } = form
-      const { currentPage, pageSize } = page
+      const { currentPage, pageSize } = toRaw(page)
       const createTimeList = []
       if (createTime && createTime.length === 2) {
         createTime.forEach(item => {
@@ -298,11 +308,12 @@ export default {
       sortCol,
       sortOrder,
       handleSortChange,
-      load,
+      loading,
       searchFun,
       resetFun,
       handleAddRight,
       handleDelRight,
+      handleEdit,
       editConfirm
     }
   },
@@ -315,7 +326,8 @@ export default {
     'a-pagination': Pagination,
     'a-breadcrumb': Breadcrumb,
     'a-breadcrumb-item': Breadcrumb.Item,
-    'a-range-picker': DatePicker.RangePicker
+    'a-range-picker': DatePicker.RangePicker,
+    'a-back-top': BackTop
   }
 }
 </script>
@@ -349,7 +361,7 @@ export default {
   .pagination-box {
     display: block;
     text-align: center;
-    margin-top: 20px;
+    padding: 20px 0;
   }
 }
 </style>

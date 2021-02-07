@@ -7,7 +7,7 @@
     </a-breadcrumb>
     <SearchBox>
       <template v-slot:main>
-        <a-form ref="registerForm" :model="form" layout="inline" :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  :labelAlign="right"
+        <a-form ref="registerForm" :model="form" layout="inline" :label-col="{style: 'width: 100px' }" :wrapper-col="{style: 'width: 265px' }"  labelAlign="right"
           @submit.prevent>
           <a-form-item label="用户名" name="username" class="search-box-item" >
             <a-input v-model:value="form.username" style="width: 80%"></a-input>
@@ -136,7 +136,7 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, toRaw } from 'vue'
 import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
 import { useRoleListDic, usePage, useTableSort } from '../hooks'
 export default {
@@ -251,9 +251,9 @@ export default {
      * 加载函数
      */
     async function load () {
-      console.log('load')
       const { username, userId, userTickName, roleId, createTime, lastLoginTime } = form
-      const { currentPage, pageSize } = page
+      const { currentPage, pageSize } = toRaw(page)
+      console.log('load', currentPage, pageSize)
       const createTimeList = []
       const loginTimeList = []
       if (createTime && createTime.length === 2) {
@@ -377,7 +377,7 @@ export default {
     .pagination-box {
       display: block;
       text-align: center;
-      margin-top: 20px;
+      padding: 20px 0;
     }
   }
 </style>

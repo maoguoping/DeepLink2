@@ -99,15 +99,14 @@ export default {
       roleList.value = res.data.map(item => {
         return {
           ...item,
-          key: item.id
+          key: item.id + '',
+          title: item.name
           // chosen: false
         }
       })
+      console.log('roleList.value', roleList.value)
     }
     const getRoleByRight = async () => {
-      setTimeout(() => {
-        dialogVisible.value = true
-      }, 300)
       try {
         const res = await $axios.post($api.setting.getRoleByRight, {
           rightId: rightInfo.rightId
@@ -116,7 +115,7 @@ export default {
         if (res.list.length > 0) {
           roleIds = res.list.map(i => i.roleId)
         }
-        ownRoleList.value = roleIds
+        ownRoleList.value = res.list.map(i => i.roleId + '')
         rightInfo.roleIds = roleIds
       } catch (err) {
         message.error('加载拥有权限的角色失败')
@@ -124,7 +123,7 @@ export default {
     }
     const handleRoleChange = (targetKeys, direction, moveKeys) => {
       console.log(targetKeys, direction, moveKeys)
-      ownRoleList.value = targetKeys
+      ownRoleList.value = targetKeys.map(i => i + '')
     }
     const getArrDifference = (arr1, arr2) => {
       let arr1Change = []
@@ -175,7 +174,7 @@ export default {
             rightInfo: JSON.stringify({ rightName, rightId }),
             type: type.value
           })
-          if (res.list.length > 0 && this.type === 'add') {
+          if (res.list.length > 0 && type.value === 'add') {
             message.warning('权限以及权限id不可重复！')
           } else {
             console.log(type.value)
@@ -194,8 +193,10 @@ export default {
       emit('update:modelValue', false)
     }
     watch(modelValue, async (newVal) => {
+      console.log('roleList.value', roleList.value)
       if (newVal) {
         await getRoleListDic()
+        console.log('roleList.value', roleList.value)
         if (type.value === 'add') {
           rightInfo.rightId = ''
           rightInfo.rightName = ''
@@ -209,6 +210,7 @@ export default {
           rightInfo.path = path
           getRoleByRight()
         }
+        dialogVisible.value = true
       } else {
         dialogVisible.value = false
       }

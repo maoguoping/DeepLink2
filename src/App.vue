@@ -1,12 +1,24 @@
 <template>
+  <a-config-provider :locale="locale">
     <div id="DeepLink">
       <router-view></router-view>
     </div>
+  </a-config-provider>
 </template>
 
 <script>
+import { ConfigProvider } from 'ant-design-vue'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
 export default {
-  name: 'app' // name属性作为组件名称，全局 ID 自动作为组件的 name
+  name: 'app', // name属性作为组件名称，全局 ID 自动作为组件的 name
+  data () {
+    return {
+      locale: zhCN
+    }
+  },
+  components: {
+    'a-config-provider': ConfigProvider
+  }
 }
 </script>
 <style lang="scss" type="text/scss">

@@ -1,7 +1,7 @@
 <template>
-    <div class="main">
-      <header-bar class="header"></header-bar>
-      <div class="wrapper">
+  <div class="main">
+    <header-bar class="header"></header-bar>
+    <div class="wrapper">
       <div class="wrapper-main">
       <a-layout>
         <a-layout>
@@ -11,8 +11,8 @@
         </a-layout>
       </a-layout>
       </div>
-      </div>
     </div>
+  </div>
 </template>
 
 <script>
@@ -71,12 +71,10 @@ export default {
   //总布局
   .wrapper {
     width: 100%;
-    margin: 0 auto;
-    position: absolute;
-    top: 118px;
-    bottom: 0px;
-    left: auto;
+    position: relative;
+    padding-top: 118px;
     background: #f0f2f5;
+    min-height: 100vh;
     //中心布局
     .wrapper-main {
       width: 1024px;

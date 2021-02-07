@@ -11,7 +11,7 @@
     "dll": "webpack --progress --config ./webpack.dll.conf.js"
   },
   "dependencies": {
-    "ant-design-vue": "^2.0.0-rc.9",
+    "ant-design-vue": "^2.0.0",
     "axios": "^0.21.1",
     "better-scroll": "^2.2.0",
     "core-js": "^3.6.5",

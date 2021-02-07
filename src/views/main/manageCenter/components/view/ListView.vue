@@ -346,7 +346,7 @@ export default {
   .pagination-box {
     display: block;
     text-align: center;
-    margin-top: 20px;
+    padding: 20px 0;
   }
 }
 </style>
