@@ -156,7 +156,7 @@ export default {
     const addRight = async () => {
       try {
         await $axios.post($api.setting.addRight, {
-          rightInfo: JSON.stringify(rightInfo),
+          ...rightInfo,
           addRoleIds: ownRoleList.value.join(',')
         })
         emit('update', type.value)
@@ -171,7 +171,8 @@ export default {
       } else {
         try {
           const res = await $axios.post($api.setting.checkRightExist, {
-            rightInfo: JSON.stringify({ rightName, rightId }),
+            rightName,
+            rightId,
             type: type.value
           })
           if (res.list.length > 0 && type.value === 'add') {

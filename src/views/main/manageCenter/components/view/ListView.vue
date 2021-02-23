@@ -244,12 +244,10 @@ export default {
         this.loading = true
         const res = await $axios.post($api.manageCenter.getViewDataByPathId, {
           pathId: pathId,
-          pageInfo: JSON.stringify({
-            currentPage: this.page.currentPage,
-            pageSize: this.page.pageSize,
-            sortBy: this.sortBy,
-            order: this.order
-          })
+          currentPage: this.page.currentPage,
+          pageSize: this.page.pageSize,
+          sortBy: this.sortBy,
+          order: this.order
         })
         const result = res.data.list.map(item => {
           item.modifyTime = Utils.timeFormat(new Date(item.modifyTime), 'yyyy-MM-dd')

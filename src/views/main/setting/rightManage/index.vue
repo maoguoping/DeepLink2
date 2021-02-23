@@ -133,9 +133,7 @@ export default {
       const ids = selectList.value.map(i => i.rightId)
       try {
         await $axios.post($api.setting.deleteRight, {
-          rightInfo: JSON.stringify({
-            rightId: ids.join(',')
-          })
+          rightId: ids.join(',')
         })
         message.success('删除权限成功')
         load()
@@ -267,15 +265,13 @@ export default {
       try {
         loading.value = true
         const res = await $axios.post($api.setting.getRightList, {
-          searchData: JSON.stringify({
-            rightId: rightId,
-            rightName: rightName,
-            createTime: createTimeList.join(','),
-            orderName: sortCol.value,
-            orderType: sortOrder.value,
-            index: currentPage,
-            pageSize
-          })
+          rightId: rightId,
+          rightName: rightName,
+          createTime: createTimeList.join(','),
+          orderName: sortCol.value,
+          orderType: sortOrder.value,
+          index: currentPage,
+          pageSize
         })
         const result = res.data.list.map(item => {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''

@@ -72,7 +72,7 @@ export default {
     const addRole = async () => {
       try {
         await $axios.post($api.setting.addRole, {
-          roleInfo: JSON.stringify(roleInfo)
+          ...roleInfo
         })
         emit('update', type.value)
       } catch (err) {
@@ -82,7 +82,7 @@ export default {
     const updateRole = async () => {
       try {
         await $axios.post($api.setting.updateRole, {
-          roleInfo: JSON.stringify(roleInfo)
+          ...roleInfo
         })
         emit('update', type.value)
       } catch (err) {
@@ -97,7 +97,8 @@ export default {
         message.warning('角色id不能为空！')
       } else {
         $axios.post($api.setting.checkRoleExist, {
-          roleInfo: JSON.stringify({ roleName, roleId }),
+          roleName,
+          roleId,
           type: type.value
         }).then(res => {
           if (res.data.list.length > 0 && this.type === 'add') {

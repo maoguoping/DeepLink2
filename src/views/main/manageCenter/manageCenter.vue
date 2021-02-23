@@ -253,9 +253,7 @@ export default {
           try {
             const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
             await $axios.post(api, {
-              info: JSON.stringify({
-                id: [item.id]
-              })
+              id: [item.id]
             })
             message.success('删除成功')
             this.$refs[this.viewType].updateView()
@@ -285,9 +283,7 @@ export default {
             try {
               const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
               await $axios.post(api, {
-                info: JSON.stringify({
-                  id: list
-                })
+                id: list
               })
               message.success('删除成功')
               this.$refs[this.viewType].updateView()

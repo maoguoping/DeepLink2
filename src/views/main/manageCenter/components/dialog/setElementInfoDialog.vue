@@ -169,9 +169,7 @@ export default {
               parentTypeId: this.listInfo.typeId
             }
             Object.assign(params, this.setElementInfoFormData)
-            $axios.post($api.manageCenter.updateModule, {
-              info: JSON.stringify(params)
-            }).then(res => {
+            $axios.post($api.manageCenter.updateModule, params).then(res => {
               message.success('修改成功')
               this.$emit('close')
               this.$emit('success')

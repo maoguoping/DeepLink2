@@ -122,7 +122,7 @@ export default {
         message.warning('用户昵称不能为空！')
       } else {
         try {
-          await $axios.post($api.setting.saveUserInfo, { userInfo: JSON.stringify({ userId, username, userTickName, roleId }) })
+          await $axios.post($api.setting.saveUserInfo, { userId, username, userTickName, roleId })
           message.success('修改用户信息成功')
           emit('update')
         } catch (err) {

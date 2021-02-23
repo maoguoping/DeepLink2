@@ -276,18 +276,16 @@ export default {
         loading.value = true
         console.debug('roleId', roleId)
         const res = await $axios.post($api.setting.getUserList, {
-          searchData: JSON.stringify({
-            username,
-            userId,
-            userTickName,
-            roleId: roleId ? roleId.join(',') : '',
-            createTime: createTimeList ? createTimeList.join(',') : '',
-            lastLoginTime: loginTimeList ? loginTimeList.join(',') : '',
-            orderName: sortCol.value,
-            orderType: sortOrder.value,
-            index: currentPage,
-            pageSize: pageSize
-          })
+          username,
+          userId,
+          userTickName,
+          roleId: roleId ? roleId.join(',') : '',
+          createTime: createTimeList ? createTimeList.join(',') : '',
+          lastLoginTime: loginTimeList ? loginTimeList.join(',') : '',
+          orderName: sortCol.value,
+          orderType: sortOrder.value,
+          index: currentPage,
+          pageSize: pageSize
         })
         console.debug('res', res)
         const result = res.data.userList.map(item => {

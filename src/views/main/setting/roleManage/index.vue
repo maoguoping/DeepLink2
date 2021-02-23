@@ -275,15 +275,13 @@ export default {
       try {
         loading.value = true
         const res = await $axios.post($api.setting.getRoleList, {
-          searchData: JSON.stringify({
-            roleId,
-            roleName,
-            createTime: createTimeList.join(','),
-            orderName: sortCol.value,
-            orderType: sortOrder.value,
-            index: currentPage,
-            pageSize
-          })
+          roleId,
+          roleName,
+          createTime: createTimeList.join(','),
+          orderName: sortCol.value,
+          orderType: sortOrder.value,
+          index: currentPage,
+          pageSize
         })
         const result = res.data.list.map(item => {
           item.createTime =

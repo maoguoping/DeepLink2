@@ -86,7 +86,7 @@ export default {
       form.value.validate().then((valid) => {
         if (valid) {
           $axios.post(api, {
-            info: JSON.stringify(setProjectFormData)
+            ...setProjectFormData
           }).then(res => {
             message.success(text)
             emit('success')
