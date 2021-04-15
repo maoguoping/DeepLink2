@@ -2,18 +2,19 @@ const webpack = require('webpack')
 const path = require('path')
 const chalk = require('chalk')
 const isProduction = process.env.NODE_ENV === 'production'
-const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
 const ProgressBarPlugin = require('progress-bar-webpack-plugin')
+const ShowHookPlugin = require('./buildTools/plugin/showHookPlugin')
 const cdn = {
   js: [
-    'https://cdn.jsdelivr.net/npm/vue@3.0.5/dist/vue.global.min.js',
+    'https://cdn.jsdelivr.net/npm/vue@3.0.9/dist/vue.global.min.js',
     'https://cdn.jsdelivr.net/npm/vuex@4.0.0/dist/vuex.global.min.js',
-    'https://cdn.jsdelivr.net/npm/vue-router@4.0.3/dist/vue-router.global.min.js',
-    'https://cdn.jsdelivr.net/npm/vue-lazyload@1.3.3/vue-lazyload.min.js',
-    'https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js'
+    'https://cdn.jsdelivr.net/npm/vue-router@4.0.5/dist/vue-router.global.min.js',
+    // 'https://cdn.jsdelivr.net/npm/vue-lazyload@1.3.3/vue-lazyload.min.js',
+    'https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js',
+    'https://cdn.jsdelivr.net/npm/ant-design-vue@2.1.0/dist/antd.min.js'
   ]
 }
 // const rootUrl = 'http://localhost:3000'
@@ -25,26 +26,7 @@ module.exports = {
   parallel: require('os').cpus().length > 1, 
   chainWebpack: config => {
     /* 添加分析工具 */
-    if (isProduction) {
-      // 添加cdn
-      config.plugin('html').tap(args => {
-        args[0].cdn = cdn
-        return args
-      })
-      if (process.env.npm_config_report) {
-        config.plugin('webpack-bundle-analyzer').use(
-          require('webpack-bundle-analyzer').BundleAnalyzerPlugin
-        ).end()
-      }
-    }
-    // 移除 prefetch 插件
-    // config.plugin('preload').tap(args => {
-    //   args[0].fileBlacklist.push(/runtime~.+\.js$/) //正则匹配runtime文件名，去除该文件的preload
-    //   return args
-    // })
-    config.plugins.delete('prefetch')
-    
-    config.optimization.splitChunks({
+    const splitChunksConfig = {
       cacheGroups: {
         common: {
           name: 'chunk-common', // 打包后的文件名
@@ -62,17 +44,35 @@ module.exports = {
           priority: 2,
           reuseExistingChunk: true,
           enforce: true
-        },
-        antDesignVue: {
-          name: 'ant-design-vue',
-          test: /[\\/]node_modules[\\/]ant-design-vue[\\/]/,
-          chunks: 'initial',
-          priority: 3,
-          reuseExistingChunk: true,
-          enforce: true
         }
       }
-    })
+    }
+    if (isProduction) {
+      // 添加cdn
+      config.plugin('html').tap(args => {
+        args[0].cdn = cdn
+        return args
+      })
+      if (process.env.npm_config_report) {
+        config.plugin('webpack-bundle-analyzer').use(
+          require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+        ).end()
+      }
+      splitChunksConfig.cacheGroups.antDesignVue = {
+        name: 'ant-design-vue',
+        test: /[\\/]node_modules[\\/]ant-design-vue[\\/]/,
+        chunks: 'initial',
+        priority: 3,
+        reuseExistingChunk: true,
+        enforce: true
+      }
+    } else {}
+    config.optimization.runtimeChunk = true
+    // 移除 prefetch 插件
+   
+    config.plugins.delete('prefetch')
+    
+    config.optimization.splitChunks(splitChunksConfig)
 
   // 或者
   // 修改它的选项：
@@ -142,18 +142,17 @@ module.exports = {
     }
   },
   configureWebpack: (config) => {
-    config.optimization.runtimeChunk = true
     if (isProduction) {
+      console.log('生产环境打包')
     // 为生产环境修改配置...
       config.mode = 'production'
-      config.externals = {
-        vue: 'Vue',
-        vuex: 'Vuex',
-        'vue-lazyload': 'VueLazyload',
-        'vue-router': 'VueRouter',
-        axios: 'axios'
-      }
       return {
+        externals: {
+          'vue': 'Vue',
+          'vuex': 'Vuex',
+          'vue-router': 'VueRouter',
+          'axios': 'axios'
+        },
         module: {
           rules: [
             {
@@ -166,6 +165,7 @@ module.exports = {
             }
           ]
         },
+        devtool: 'source-map',
         plugins: [
           new BundleAnalyzerPlugin(),
           new ProgressBarPlugin({
@@ -190,20 +190,13 @@ module.exports = {
         ]
       }
     } else {
+      config.mode = 'development'
       return {
+        devtool: 'eval-cheap-module-source-map',
         plugins: [
-          new webpack.DllReferencePlugin({
-            context: process.cwd(),
-            manifest: require('./dll/vendor-manifest.json')
-          }),
-          // 将 dll 注入到 生成的 html 模板中
-          new AddAssetHtmlPlugin({
-          // dll文件位置
-            filepath: path.resolve(__dirname, './dll/*.js'),
-            // dll 引用路径
-            publicPath: './vendor',
-            // dll最终输出的目录
-            outputPath: './vendor'
+          new ShowHookPlugin({
+            done: true,
+            failed: true
           })
         ]
       }

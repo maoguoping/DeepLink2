@@ -13,6 +13,7 @@ app.config.globalProperties.$axios = axios
 app.config.performance = true
 app.component('a-button', Button)
 app.component('a-input', Input)
+app.component('a-input-password', Input.Password)
 app.component('a-textarea', Input.TextArea)
 app.component('a-layout', Layout)
 app.component('a-layout-content', Layout.Content)

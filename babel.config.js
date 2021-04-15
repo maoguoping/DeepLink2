@@ -7,12 +7,14 @@ const plugins = [
       "libraryDirectory": "es",
       "style": "css" 
     }
-  ], // `style: true` 会加载 less 文件
-  "dynamic-import-node",
-  "@babel/plugin-transform-runtime"
+  ],
+  "@babel/plugin-transform-runtime",
+  "@babel/plugin-syntax-dynamic-import"
 ]
 if (process.env.NODE_ENV === 'production') {
   plugins.push(["transform-remove-console", { "exclude": [ "error", "warn", "debug"] }]);
+} else {
+  plugins.push("dynamic-import-node");
 }
 module.exports = {
   presets: [
