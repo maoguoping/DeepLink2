@@ -51,8 +51,8 @@
             </a-range-picker>
           </a-form-item>
           <div class="search-btn-box search-box-item">
-            <a-button class="search" type="primary" @click="searchFun" >搜索</a-button>
-            <a-button class="reset" type="default" @click="resetFun" >重置条件</a-button>
+            <a-button class="search" type="primary" @click="loadPage" >搜索</a-button>
+            <a-button class="reset" type="default" @click="resetForm" >重置条件</a-button>
           </div>
         </a-form>
       </template>
@@ -138,13 +138,13 @@ import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
 import { ref, reactive, onMounted, toRaw } from 'vue'
 import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
-import { useRoleListDic, usePage, useTableSort } from '../hooks'
+import { useRoleListDic, usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'userManage',
   setup () {
     console.log('setup')
     const { roleList } = useRoleListDic()
-    const { page, handleSizeChange, handleCurrentChange } = usePage(load)
+    const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(load)
     const breadcrumbList = [
       {
         label: '用户设置',
@@ -201,18 +201,12 @@ export default {
       }
     ]
     const userListData = ref([])
-    const editUserInfo = ref({})
-    const userEditDialogType = ref('edit')
-    const showUserEditDialog = ref(false)
-    /**
-     * 修改用户信息成功回调
-     */
-    const handleEdit = (row) => {
-      userEditDialogType.value = 'edit'
-      editUserInfo.value = row
-      console.log(row)
-      showUserEditDialog.value = true
-    }
+    // 用户详情弹框
+    const userEditDialog = useDetailModal('edit')
+    const userEditDialogType = userEditDialog.type
+    const showUserEditDialog = userEditDialog.show
+    const editUserInfo = userEditDialog.info
+    const handleEdit = userEditDialog.openInfoModal('edit')
     /**
      * 修改用户信息成功回调
      */
@@ -220,7 +214,7 @@ export default {
       showUserEditDialog.value = false
       load()
     }
-    const form = reactive({
+    const { form, resetForm } = useSearchForm({
       username: '',
       userId: '',
       userTickName: '',
@@ -228,17 +222,6 @@ export default {
       createTime: [],
       lastLoginTime: []
     })
-    /**
-     * 搜索清空
-     */
-    const resetFun = () => {
-      form.username = ''
-      form.userId = ''
-      form.userTickName = ''
-      form.roleId = ''
-      form.createTime = []
-      form.lastLoginTime = []
-    }
     const labelCol = reactive({
       span: 2
     })
@@ -302,13 +285,6 @@ export default {
         message.error('加载用户列表失败')
       }
     }
-    /**
-     * 搜索按钮回调
-     */
-    const searchFun = async () => {
-      page.currentPage = 1
-      load()
-    }
     const {
       sortCol,
       sortOrder,
@@ -334,8 +310,8 @@ export default {
       wrapperCol,
       loading,
       load,
-      searchFun,
-      resetFun,
+      loadPage,
+      resetForm,
       handleEdit,
       handleEditUpdate
     }

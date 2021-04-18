@@ -2,6 +2,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
+// 角色下拉选择数据
 export const useRoleListDic = function () {
   const roleList = ref([])
   const getRoleListDic = async () => {
@@ -21,6 +22,7 @@ export const useRoleListDic = function () {
     getRoleListDic
   }
 }
+// 分页加载
 export const usePage = function (cb) {
   const page = reactive({
     currentPage: 1,
@@ -38,12 +40,18 @@ export const usePage = function (cb) {
     page.currentPage = current
     cb()
   }
+  const loadPage = () => {
+    page.currentPage = 1
+    cb()
+  }
   return {
     page,
+    loadPage,
     handleSizeChange,
     handleCurrentChange
   }
 }
+// 表格排序
 export const useTableSort = function (colName, order, cb) {
   const sortCol = ref(colName)
   const sortOrder = ref(order)
@@ -59,5 +67,43 @@ export const useTableSort = function (colName, order, cb) {
     sortCol,
     sortOrder,
     handleSortChange
+  }
+}
+// 搜索表单
+export const useSearchForm = function (initFormdata) {
+  const form = reactive(initFormdata)
+  const initTmpFormData = { ...initFormdata }
+  const resetForm = () => {
+    Object.keys(initTmpFormData).forEach(key => {
+      form[key] = initTmpFormData[key]
+    })
+  }
+  return {
+    form,
+    resetForm
+  }
+}
+// 详情弹框
+export const useDetailModal = function (initType) {
+  const show = ref(false)
+  const type = ref(initType)
+  const info = ref({})
+  const openModal = (openType) => () => {
+    type.value = openType
+    show.value = true
+  }
+  const openInfoModal = (openType) => (openInfo) => {
+    if (openInfo !== undefined) {
+      info.value = openInfo
+    }
+    type.value = openType
+    show.value = true
+  }
+  return {
+    show,
+    type,
+    info,
+    openModal,
+    openInfoModal
   }
 }

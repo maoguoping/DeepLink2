@@ -21,8 +21,8 @@
             </a-range-picker>
           </a-form-item>
           <div class="search-btn-box search-box-item">
-            <a-button class="search" type="primary" @click="searchFun" >搜索</a-button>
-            <a-button class="reset" type="default" @click="resetFun" >重置条件</a-button>
+            <a-button class="search" type="primary" @click="loadPage" >搜索</a-button>
+            <a-button class="reset" type="default" @click="resetForm" >重置条件</a-button>
           </div>
         </a-form>
       </template>
@@ -89,8 +89,8 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RightEditDialog from './RightEditDialog'
-import { ref, reactive, onMounted, toRaw } from 'vue'
-import { usePage, useTableSort } from '../hooks'
+import { ref, onMounted, toRaw } from 'vue'
+import { usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'rightManage',
   setup () {
@@ -104,23 +104,19 @@ export default {
         value: '12'
       }
     ]
-    const { page, handleSizeChange, handleCurrentChange } = usePage(load)
+    const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(load)
     const rightList = ref([])
-    const rightEditDialogType = ref('add')
-    const editRightInfo = ref({})
-    const showRightEditDialog = ref(false)
+    // 权限弹窗
+    const rightEditDialog = useDetailModal('add')
+    const showRightEditDialog = rightEditDialog.show
+    const rightEditDialogType = rightEditDialog.type
+    const editRightInfo = rightEditDialog.info
+    const handleAddRight = rightEditDialog.openModal('add')
+    const handleEdit = rightEditDialog.openInfoModal('edit')
     /**
      * 表格选中项
      */
     const selectList = ref([])
-    /**
-     * 新增权限弹窗回调
-     * @return {void}
-     */
-    const handleAddRight = () => {
-      rightEditDialogType.value = 'add'
-      showRightEditDialog.value = true
-    }
     /**
      * 删除权限回调
      * @return {void}
@@ -202,35 +198,11 @@ export default {
       sortOrder,
       handleSortChange
     } = useTableSort('rightId', 'ASC', load)
-    const form = reactive({
+    const { form, resetForm } = useSearchForm({
       rightName: '',
       rightId: '',
       createTime: []
     })
-    /**
-     * 搜索框清空
-     */
-    const resetFun = () => {
-      form.rightName = ''
-      form.rightId = ''
-      form.createTime = []
-    }
-    /**
-     * 搜索按钮回调
-     */
-    const searchFun = () => {
-      page.currentPage = 1
-      load()
-    }
-    /**
-     * 修改用户信息
-     */
-    const handleEdit = (row) => {
-      rightEditDialogType.value = 'edit'
-      editRightInfo.value = row
-      console.log(row)
-      showRightEditDialog.value = true
-    }
     /**
      * 弹窗确定回调
      * @param {string} type 成功关闭类别
@@ -243,7 +215,7 @@ export default {
       } else {
         message.success('修改权限成功')
       }
-      searchFun()
+      loadPage()
     }
     const loading = ref(false)
     /**
@@ -305,8 +277,8 @@ export default {
       sortOrder,
       handleSortChange,
       loading,
-      searchFun,
-      resetFun,
+      loadPage,
+      resetForm,
       handleAddRight,
       handleDelRight,
       handleEdit,

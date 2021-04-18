@@ -18,7 +18,7 @@
           <a-form-item
             class="search-box-item"
             label="角色名"
-            name="username"
+            name="roleName"
           >
             <a-input
               style="width: 80%"
@@ -28,7 +28,7 @@
           <a-form-item
             class="search-box-item"
             label="角色id"
-            name="userTickName"
+            name="roleId"
           >
             <a-input
               style="width: 80%"
@@ -49,8 +49,8 @@
           <div
             class="search-btn-box search-box-item"
           >
-            <a-button class="search" type="primary" @click="searchFun" >搜索</a-button>
-            <a-button class="reset" type="default" @click="resetFun" >重置条件</a-button>
+            <a-button class="search" type="primary" @click="loadPage" >搜索</a-button>
+            <a-button class="reset" type="default" @click="resetForm" >重置条件</a-button>
           </div>
         </a-form>
       </template>
@@ -148,8 +148,8 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RoleEditDialog from './RoleEditDialog'
-import { ref, reactive, onMounted, toRaw } from 'vue'
-import { usePage, useTableSort } from '../hooks'
+import { ref, onMounted, toRaw } from 'vue'
+import { usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'roleManage',
   setup () {
@@ -193,57 +193,20 @@ export default {
         slots: { customRender: 'action' }
       }
     ]
-    const { page, handleSizeChange, handleCurrentChange } = usePage(load)
+    const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(load)
     const roleList = ref([])
-    const form = reactive({
+    const { form, resetForm } = useSearchForm({
       roleName: '',
       roleId: '',
       createTime: []
     })
-    /**
-     * 搜索按钮回调
-     */
-    const searchFun = () => {
-      page.currentPage = 1
-      load()
-    }
-    /**
-     * 重置条件
-     */
-    const resetFun = () => {
-      form.username = ''
-      form.userId = ''
-      form.userTickName = ''
-      form.roleId = ''
-      form.createTime = []
-      form.lastLoginTime = []
-    }
-    const roleEditDialogType = ref('add')
-    const editRoleInfo = ref({})
-    const showRoleEditDialog = ref(false)
-    /**
-     * 修改用户信息
-     */
-    const handleEdit = (row) => {
-      roleEditDialogType.value = 'edit'
-      editRoleInfo.value = row
-      console.log(row)
-      showRoleEditDialog.value = true
-    }
-    /**
-     * 修改用户信息成功回调
-     */
-    const handleEditUpdate = () => {
-      showRoleEditDialog.value = false
-      load()
-    }
-    /**
-     * 新增角色弹窗回调
-     */
-    const handleAddRole = () => {
-      roleEditDialogType.value = 'add'
-      showRoleEditDialog.value = true
-    }
+    // 角色弹窗
+    const roleEditDialog = useDetailModal('add')
+    const roleEditDialogType = roleEditDialog.type
+    const showRoleEditDialog = roleEditDialog.show
+    const editRoleInfo = roleEditDialog.info
+    const handleAddRole = roleEditDialog.openModal('add')
+    const handleEdit = roleEditDialog.openInfoModal('edit')
     /**
      * 弹窗确定回调
      */
@@ -254,7 +217,7 @@ export default {
       } else {
         message.success('修改角色成功')
       }
-      searchFun()
+      loadPage()
     }
     const loading = ref(false)
     /**
@@ -323,10 +286,9 @@ export default {
       sortOrder,
       loading,
       handleSortChange,
-      searchFun,
-      resetFun,
+      loadPage,
+      resetForm,
       handleEdit,
-      handleEditUpdate,
       handleAddRole,
       editConfirm
     }
