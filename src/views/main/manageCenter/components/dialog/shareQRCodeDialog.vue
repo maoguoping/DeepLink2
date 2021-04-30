@@ -17,7 +17,7 @@
 <script>
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { watch, ref, toRefs } from 'vue'
+import { watch, toRefs, reactive } from 'vue'
 export default {
   name: 'shareQRCodeDialog',
   props: {
@@ -34,8 +34,10 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue } = toRefs(props)
-    const dialogVisible = ref(false)
-    const svg = ref('')
+    const state = reactive({
+      dialogVisible: false,
+      svg: ''
+    })
     const handleClose = () => {
       emit('update:modelValue', false)
     }
@@ -43,13 +45,12 @@ export default {
       $axios.post($api.api.getQrCodeImageFromUrl, {
         query: window.location.href
       }).then(res => {
-        svg.value = res.data
+        state.svg = res.data
       })
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     return {
-      dialogVisible,
-      svg,
+      ...toRefs(state),
       handleClose
     }
   }

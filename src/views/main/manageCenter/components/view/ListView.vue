@@ -60,11 +60,14 @@
 </template>
 <script>
 import Utils from '@/lib/utils.js'
-import { mapState, mapMutations } from 'vuex'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message, Dropdown, Table, Pagination, Tag, Menu } from 'ant-design-vue'
-
+import { reactive, toRefs, computed, watch } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import { usePage } from '@/hooks/page'
+import { useTableSort } from '@/hooks/table'
 export default {
   name: 'list-view',
   props: {
@@ -74,63 +77,154 @@ export default {
       default: true
     }
   },
-  data () {
+  setup (props, { emit }) {
+    const store = useStore()
+    const pathId = computed(() => store.state.manageCenterStore.pathId)
+    watch(pathId, (val) => {
+      console.log('watch val', val)
+    })
+    const router = useRouter()
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
         this.handleSelectionChange(selectedRows)
       }
     }
-    const page = {
-      currentPage: 1,
-      pageSize: 10,
-      total: 0,
-      list: [10, 20, 30, 40]
-    }
-    return {
+    const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(loadViewData)
+    const {
+      sortCol,
+      sortOrder,
+      handleSortChange
+    } = useTableSort('modifyTime', 'ASC', loadViewData)
+    const state = reactive({
       rowSelection,
-      page,
-      sortBy: 'modifyTime',
-      order: 'DESC',
       viewData: [],
       msg: 'Welcome to Your Vue.js App',
       multipleSelection: [],
-      columns: [
-        {
-          title: '名称',
-          dataIndex: 'name',
-          key: 'name'
-        },
-        {
-          title: '修改日期',
-          dataIndex: 'modifyTime',
-          key: 'modifyTime'
-        },
-        {
-          title: '标签',
-          key: 'tags',
-          dataIndex: 'tags',
-          slots: { customRender: 'tags' }
-        },
-        {
-          title: '介绍',
-          dataIndex: 'description',
-          key: 'description'
-        },
-        {
-          title: '操作',
-          key: 'action',
-          slots: { customRender: 'action' }
-        }
-      ],
       loading: false
-    }
-  },
-  computed: {
-    ...mapState({
-      pathStr: state => state.manageCenterStore.manageCenterPath,
-      pathId: state => state.manageCenterStore.manageCenterPathId
     })
+    const columns = [
+      {
+        title: '名称',
+        dataIndex: 'name',
+        key: 'name'
+      },
+      {
+        title: '修改日期',
+        dataIndex: 'modifyTime',
+        key: 'modifyTime'
+      },
+      {
+        title: '标签',
+        key: 'tags',
+        dataIndex: 'tags',
+        slots: { customRender: 'tags' }
+      },
+      {
+        title: '介绍',
+        dataIndex: 'description',
+        key: 'description'
+      },
+      {
+        title: '操作',
+        key: 'action',
+        slots: { customRender: 'action' }
+      }
+    ]
+    /**
+     *查看事件
+     * @param {Object} row 行数据
+     * @return {void}
+     */
+    const handleRead = (row) => {
+      emit('view-read', row)
+      console.log('view-read', row)
+      page.currentPage = 1
+      store.commit('changeManageCenterPath', {
+        pathId: row.pathId,
+        pathName: decodeURI(row.path),
+        type: row.type
+      })
+      router.push({
+        path: '/manageCenter',
+        query: {
+          pathId: Utils.pathStrEncode(row.pathId),
+          path: Utils.pathStrEncode(encodeURI(row.path)),
+          type: row.type
+        }
+      })
+    }
+    /**
+     *下拉框事件
+     */
+    const handleCommand = ({ key }, record) => {
+      console.log(key, record)
+      switch (key) {
+        case 'edit': {
+          emit('edit', record)
+          break
+        }
+        case 'delete': {
+          emit('delete', record)
+          break
+        }
+        case 'move': {
+          emit('move', record)
+          break
+        }
+      }
+    }
+    // const pathStr = computed(() => store.state.manageCenterStore.manageCenterPath)
+    /**
+     *加载表格
+     * @return {void}
+     */
+    async function loadViewData () {
+      console.log('loadViewData')
+      try {
+        state.loading = true
+        const res = await $axios.post($api.manageCenter.getViewDataByPathId, {
+          pathId: pathId.value || '',
+          currentPage: page.currentPage,
+          pageSize: page.pageSize,
+          sortBy: sortCol.value,
+          order: sortOrder.value
+        })
+        const result = res.data.list.map(item => {
+          item.modifyTime = Utils.timeFormat(new Date(item.modifyTime), 'yyyy-MM-dd')
+          item.tags = item.tag.split(',')
+          item.children = []
+          return item
+        })
+        console.log(result)
+        page.total = res.data.total
+        state.viewData = result
+        emit('on-change', {
+          type: 'update',
+          viewType: 'listView',
+          viewDescription: res.data.listDescription
+        })
+        state.loading = false
+      } catch (err) {
+        state.loading = false
+        message.error('加载数据错误')
+      }
+    }
+    return {
+      ...toRefs(state),
+      pathId,
+      columns,
+      page,
+      handleCurrentChange,
+      handleSizeChange,
+      loadViewData,
+      loadPage,
+      sortCol,
+      sortOrder,
+      handleSortChange,
+      handleRead,
+      handleCommand
+    }
   },
   components: {
     'a-dropdown': Dropdown,
@@ -141,15 +235,6 @@ export default {
     'a-menu-item': Menu.Item
   },
   methods: {
-    ...mapMutations(['changeManageCenterPath']),
-    /**
-     * 更新列表数据
-     * @return {void}
-     */
-    updateView () {
-      this.page.currentPage = 1
-      this.loadViewData()
-    },
     /**
      * 选择变化回调
      * @param {Array} valList 返回id列表
@@ -159,115 +244,8 @@ export default {
       this.multipleSelection = valList
       this.$emit('mul-section', valList)
     },
-    /**
-     * 分页页面size变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleSizeChange (val) {
-      this.page.pageSize = val
-      this.page.currentPage = 1
-      this.loadViewData()
-    },
-    /**
-     * 分页页码变化回调
-     * @param {Number} val 更改数字
-     * @return {void}
-     */
-    handleCurrentChange (val) {
-      console.log('handleCurrentChange', val)
-      this.page.currentPage = val
-      this.loadViewData()
-    },
-    /**
-     * 分页排序变化回调
-     * @param {Object} event 更改事件
-     * @return {void}
-     */
-    handelSortChange (event) {
-      this.sortBy = event.prop
-      this.order = event.order === 'ascending' ? 'ASC' : 'DESC'
-      this.loadViewData()
-    },
     filterTag (value, row) {
       return row.tag === value
-    },
-    /**
-     *查看事件
-     * @param {Object} row 行数据
-     * @return {void}
-     */
-    handleRead (row) {
-      this.$emit('view-read', row)
-      this.page.currentPage = 1
-      this.changeManageCenterPath({
-        pathId: row.pathId,
-        pathName: decodeURI(row.path),
-        type: row.type
-      })
-      this.$router.push({
-        path: '/manageCenter',
-        query: {
-          pathId: Utils.pathStrEncode(row.pathId),
-          path: Utils.pathStrEncode(encodeURI(row.path)),
-          type: row.type
-        }
-      })
-    },
-    /**
-     *下拉框事件
-     */
-    handleCommand ({ key }, record) {
-      console.log(key, record)
-      switch (key) {
-        case 'edit': {
-          this.$emit('edit', record)
-          break
-        }
-        case 'delete': {
-          this.$emit('delete', record)
-          break
-        }
-        case 'move': {
-          this.$emit('move', record)
-          break
-        }
-      }
-    },
-    /**
-     *加载表格
-     * @return {void}
-     */
-    async loadViewData () {
-      const pathId = this.pathId || ''
-      try {
-        this.loading = true
-        const res = await $axios.post($api.manageCenter.getViewDataByPathId, {
-          pathId: pathId,
-          currentPage: this.page.currentPage,
-          pageSize: this.page.pageSize,
-          sortBy: this.sortBy,
-          order: this.order
-        })
-        const result = res.data.list.map(item => {
-          item.modifyTime = Utils.timeFormat(new Date(item.modifyTime), 'yyyy-MM-dd')
-          item.tags = item.tag.split(',')
-          item.children = []
-          return item
-        })
-        console.log(result)
-        this.page.total = res.data.total
-        this.viewData = result
-        this.$emit('on-change', {
-          type: 'update',
-          viewType: 'listView',
-          viewDescription: res.data.listDescription
-        })
-        this.loading = false
-      } catch (err) {
-        this.loading = false
-        message.error('加载数据错误')
-      }
     },
     /**
      * 表格行class生成
@@ -293,14 +271,16 @@ export default {
     //                path=this.pathStr;
     //            }
     //            this.   (path);
-    this.defaultLoad && this.updateView()
+    this.defaultLoad && this.loadPage()
   },
   watch: {
     pathId (val) {
+      console.log('watch pathId', val)
       this.loadViewData()
     },
     defaultLoad (val) {
-      val && this.updateView()
+      console.log('watch defaultLoad', val)
+      val && this.loadPage()
     }
   }
 }

@@ -43,23 +43,25 @@
 <script>
 import md5 from 'md5'
 import validator from './validator'
-import { reactive, getCurrentInstance } from 'vue'
+import { reactive, getCurrentInstance, toRefs } from 'vue'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 export default {
   name: 'registerBox',
   setup (props, { emit }) {
+    const state = reactive({
+      form: {
+        account: '',
+        password: '',
+        passwordConfirm: '',
+        passwordQes: '',
+        passwordAns: ''
+      }
+    })
     const internalInstance = getCurrentInstance()
     const labelCol = { span: 8 }
     const wrapperCol = { span: 10 }
-    const form = reactive({
-      account: '',
-      password: '',
-      passwordConfirm: '',
-      passwordQes: '',
-      passwordAns: ''
-    })
     /**
        * 切换到登录
        */
@@ -74,10 +76,10 @@ export default {
         const valid = await internalInstance.refs.registerForm.validate()
         if (valid) {
           const res = await $axios.post($api.users.register, {
-            username: this.form.account,
-            password: md5(this.form.password),
-            passwordQes: this.form.passwordQes,
-            passwordAns: md5(this.form.passwordAns)
+            username: state.form.account,
+            password: md5(state.form.password),
+            passwordQes: state.form.passwordQes,
+            passwordAns: md5(state.form.passwordAns)
           })
           if (res.registerSuccess) {
             message.success(res.message)
@@ -98,7 +100,7 @@ export default {
        * @param callback
        */
     const passwordConfirmPattern = async (rule, value) => {
-      if (value !== this.form.password) {
+      if (value !== state.form.password) {
         return Promise.reject(new Error('密码必须一致'))
       } else {
         return Promise.resolve()
@@ -111,14 +113,14 @@ export default {
        * @param callback
        */
     const passwordAnsConfirmPattern = async (rule, value) => {
-      if (value === this.form.password) {
+      if (value === state.form.password) {
         return Promise.reject(new Error('密保答案与问题不能相同'))
       } else {
         return Promise.resolve()
       }
     }
     return {
-      form,
+      ...toRefs(state),
       isDisable: false,
       rules: {
         account: [

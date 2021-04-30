@@ -1,7 +1,7 @@
 import { createStore } from 'vuex'
 import platform from './platformStore'
 import headerBar from './headerBarStore'
-import manageCenterStore from '../views/main/manageCenter/manageCenterStore'
+import manageCenterStore from './manageCenterStore'
 export default createStore({
   state: {
     a: 'ss'

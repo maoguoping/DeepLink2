@@ -41,7 +41,7 @@ import { mapState } from 'vuex'
 import { message } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { watch, ref, toRefs } from 'vue'
+import { watch, toRefs, reactive } from 'vue'
 import { useElementTypeDic, useFolderTypeDic } from '../../hooks'
 export default {
   name: 'set-project-dialog',
@@ -81,7 +81,9 @@ export default {
   },
   setup (props) {
     const { value } = toRefs(props)
-    const dialogVisible = ref(false)
+    const state = reactive({
+      dialogVisible: false
+    })
     const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
     const { elementTypeList, getElementTypeDic } = useElementTypeDic()
     watch(value, async (newVal) => {
@@ -89,10 +91,10 @@ export default {
         await getFolderTypeDic()
         await getElementTypeDic()
       }
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     return {
-      dialogVisible,
+      ...toRefs(state),
       folderTypeList,
       elementTypeList
     }

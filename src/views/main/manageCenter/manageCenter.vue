@@ -57,15 +57,12 @@ import SetProjectDialog from './components/dialog/setProjectDialog.vue'
 import SetModuleDialog from './components/dialog/setModuleDialog.vue'
 import ListInfoDialog from './components/dialog/listInfoDialog.vue'
 import ShareQRCodeDialog from './components/dialog/shareQRCodeDialog'
+import { reactive, toRefs } from 'vue'
 export default {
   name: 'manage-center',
   setup () {
-    console.log('setup')
-    return {}
-  },
-  data () {
     console.log('data')
-    return {
+    const state = reactive({
       docId: '1519187825477',
       currentItem: {},
       listItems: [],
@@ -104,6 +101,9 @@ export default {
       },
       defaultLoad: false,
       currentUrl: window.location.href
+    })
+    return {
+      ...toRefs(state)
     }
   },
   computed: {

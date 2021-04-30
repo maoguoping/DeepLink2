@@ -35,12 +35,18 @@ import md5 from 'md5'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
-import { reactive, getCurrentInstance } from 'vue'
+import { reactive, getCurrentInstance, toRefs } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 export default {
   name: 'loginBox',
   setup (props, { emit }) {
+    const state = reactive({
+      form: {
+        account: '',
+        password: ''
+      }
+    })
     const internalInstance = getCurrentInstance()
     const store = useStore()
     const router = useRouter()
@@ -59,10 +65,6 @@ export default {
         return Promise.resolve()
       }
     }
-    const form = reactive({
-      account: '',
-      password: ''
-    })
     const labelCol = { span: 4 }
     const wrapperCol = { span: 19 }
     const isDisable = false
@@ -83,8 +85,8 @@ export default {
         const valid = await internalInstance.refs.loginForm.validate()
         if (valid) {
           const res = await $axios.post($api.users.login, {
-            username: form.account,
-            password: md5(form.password)
+            username: state.form.account,
+            password: md5(state.form.password)
           })
           // 将用户信息放入localStorage
           localStorage.setItem('username', res.username)
@@ -107,9 +109,9 @@ export default {
       emit('change-box', 'register')
     }
     return {
+      ...toRefs(state),
       labelCol,
       wrapperCol,
-      form,
       isDisable,
       rules,
       login,

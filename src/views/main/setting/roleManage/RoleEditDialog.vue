@@ -32,7 +32,7 @@
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message } from 'ant-design-vue'
-import { watch, ref, toRefs, reactive } from 'vue'
+import { watch, toRefs, reactive } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -60,11 +60,13 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue, type, data } = toRefs(props)
-    const dialogVisible = ref(false)
-    const roleInfo = reactive({
-      roleId: '',
-      roleName: '',
-      description: ''
+    const state = reactive({
+      dialogVisible: false,
+      roleInfo: {
+        roleId: '',
+        roleName: '',
+        description: ''
+      }
     })
     const handleClose = () => {
       emit('update:modelValue', false)
@@ -72,7 +74,7 @@ export default {
     const addRole = async () => {
       try {
         await $axios.post($api.setting.addRole, {
-          ...roleInfo
+          ...state.roleInfo
         })
         emit('update', type.value)
       } catch (err) {
@@ -82,7 +84,7 @@ export default {
     const updateRole = async () => {
       try {
         await $axios.post($api.setting.updateRole, {
-          ...roleInfo
+          ...state.roleInfo
         })
         emit('update', type.value)
       } catch (err) {
@@ -90,7 +92,7 @@ export default {
       }
     }
     const saveFun = () => {
-      const { roleName, roleId } = roleInfo
+      const { roleName, roleId } = state.roleInfo
       if (roleName === '') {
         message.warning('角色名不能为空！')
       } else if (roleId === '') {
@@ -117,22 +119,25 @@ export default {
     }
     watch(modelValue, (newVal) => {
       if (type.value === 'add') {
-        roleInfo.roleId = ''
-        roleInfo.roleName = ''
-        roleInfo.description = ''
+        state.roleInfo = {
+          roleId: '',
+          roleName: '',
+          description: ''
+        }
       }
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     watch(data, (newVal) => {
       console.log(newVal)
       const { roleId, roleName, description } = newVal
-      roleInfo.roleId = roleId
-      roleInfo.roleName = roleName
-      roleInfo.description = description
+      state.roleInfo = {
+        roleId,
+        roleName,
+        description
+      }
     })
     return {
-      dialogVisible,
-      roleInfo,
+      ...toRefs(state),
       handleClose,
       saveFun
     }

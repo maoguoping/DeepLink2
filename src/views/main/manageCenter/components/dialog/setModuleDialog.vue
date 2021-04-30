@@ -84,6 +84,17 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue, data } = toRefs(props)
+    const state = reactive({
+      dialogVisible: false,
+      setModuleFormData: {
+        id: '', // 模块id
+        name: '', // 模块名称
+        oldName: '', // 模块原名称
+        typeId: '', // 模块类型id
+        moduleType: '0', // 模块类型(0：文件夹；1：元素)
+        description: '' // 模块描述
+      }
+    })
     const store = useStore()
     const rules = readonly({
       name: [
@@ -99,15 +110,6 @@ export default {
       ]
     })
     const form = ref(null)
-    const dialogVisible = ref(false)
-    const setModuleFormData = reactive({
-      id: '', // 模块id
-      name: '', // 模块名称
-      oldName: '', // 模块原名称
-      typeId: '', // 模块类型id
-      moduleType: '0', // 模块类型(0：文件夹；1：元素)
-      description: '' // 模块描述
-    })
     const { folderTypeList, getFolderTypeDic } = useFolderTypeDic()
     const { elementTypeList, getElementTypeDic } = useElementTypeDic()
     const listInfo = computed(() => store.state.manageCenterStore.manageCenterInfo)
@@ -132,7 +134,7 @@ export default {
         parentType: listInfo.value.type,
         parentTypeId: listInfo.value.typeId
       }
-      Object.assign(params, setModuleFormData)
+      Object.assign(params, state.setModuleFormData)
       form.value.validate().then((valid) => {
         if (valid) {
           $axios.post(api, {
@@ -150,22 +152,23 @@ export default {
         await getFolderTypeDic()
         await getElementTypeDic()
       }
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     watch(data, (newVal) => {
       const { id, name, description, typeId, moduleType } = newVal
-      setModuleFormData.id = id
-      setModuleFormData.name = name
-      setModuleFormData.oldName = name
-      setModuleFormData.description = description
-      setModuleFormData.typeId = typeId
-      setModuleFormData.moduleType = moduleType || '0'
+      state.setModuleFormData = {
+        id,
+        name,
+        oldName: name,
+        description,
+        typeId,
+        moduleType: moduleType || '0'
+      }
     })
     return {
-      dialogVisible,
+      ...toRefs(state),
       folderTypeList,
       elementTypeList,
-      setModuleFormData,
       rules,
       form,
       handleClose,

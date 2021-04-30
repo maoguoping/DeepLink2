@@ -148,11 +148,17 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RoleEditDialog from './RoleEditDialog'
-import { ref, onMounted, toRaw } from 'vue'
-import { usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
+import { onMounted, toRaw, toRefs, reactive } from 'vue'
+import { usePage } from '@/hooks/page'
+import { useTableSort } from '@/hooks/table'
+import { useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'roleManage',
   setup () {
+    const state = reactive({
+      loading: false,
+      roleList: []
+    })
     const breadcrumbList = [
       {
         label: '用户设置',
@@ -194,7 +200,6 @@ export default {
       }
     ]
     const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(load)
-    const roleList = ref([])
     const { form, resetForm } = useSearchForm({
       roleName: '',
       roleId: '',
@@ -219,7 +224,6 @@ export default {
       }
       loadPage()
     }
-    const loading = ref(false)
     /**
      * 加载数据函数
      */
@@ -236,7 +240,7 @@ export default {
         })
       }
       try {
-        loading.value = true
+        state.loading = true
         const res = await $axios.post($api.setting.getRoleList, {
           roleId,
           roleName,
@@ -254,11 +258,11 @@ export default {
             ) || ''
           return item
         })
-        roleList.value = result
+        state.roleList = result
         page.total = res.data.total
-        loading.value = false
+        state.loading = false
       } catch (err) {
-        loading.value = false
+        state.loading = false
         message.error('加载列表数据失败！')
       }
     }
@@ -271,11 +275,11 @@ export default {
       load()
     })
     return {
+      ...toRefs(state),
       breadcrumbList,
       page,
       handleSizeChange,
       handleCurrentChange,
-      roleList,
       form,
       roleEditDialogType,
       editRoleInfo,
@@ -284,7 +288,6 @@ export default {
       load,
       sortCol,
       sortOrder,
-      loading,
       handleSortChange,
       loadPage,
       resetForm,

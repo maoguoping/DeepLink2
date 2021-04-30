@@ -22,53 +22,6 @@ export const useRoleListDic = function () {
     getRoleListDic
   }
 }
-// 分页加载
-export const usePage = function (cb) {
-  const page = reactive({
-    currentPage: 1,
-    pageSize: 10,
-    total: 0,
-    list: [10, 20, 30, 40]
-  })
-  const handleSizeChange = (current, size) => {
-    console.debug('切换size', current, size)
-    page.pageSize = size
-    page.currentPage = 1
-    cb()
-  }
-  const handleCurrentChange = (current) => {
-    page.currentPage = current
-    cb()
-  }
-  const loadPage = () => {
-    page.currentPage = 1
-    cb()
-  }
-  return {
-    page,
-    loadPage,
-    handleSizeChange,
-    handleCurrentChange
-  }
-}
-// 表格排序
-export const useTableSort = function (colName, order, cb) {
-  const sortCol = ref(colName)
-  const sortOrder = ref(order)
-  const handleSortChange = (params) => {
-    const { prop, order } = params
-    let sortOrder = ''
-    order === 'ascending' ? sortOrder = 'ASC' : sortOrder = 'DESC'
-    sortCol.value = prop
-    sortOrder.value = sortOrder
-    cb()
-  }
-  return {
-    sortCol,
-    sortOrder,
-    handleSortChange
-  }
-}
 // 搜索表单
 export const useSearchForm = function (initFormdata) {
   const form = reactive(initFormdata)

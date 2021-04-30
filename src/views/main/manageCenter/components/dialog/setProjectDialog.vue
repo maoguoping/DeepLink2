@@ -52,6 +52,15 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue, data } = toRefs(props)
+    const state = reactive({
+      dialogVisible: false,
+      setProjectFormData: {
+        id: '',
+        name: '',
+        oldName: '',
+        description: ''
+      }
+    })
     const rules = {
       name: [
         { required: true, message: '请输入项目名称', trigger: 'blur' },
@@ -62,14 +71,7 @@ export default {
         { min: 0, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
       ]
     }
-    const dialogVisible = ref(false)
     const form = ref(null)
-    const setProjectFormData = reactive({
-      id: '',
-      name: '',
-      oldName: '',
-      description: ''
-    })
     const handleClose = () => {
       form.value.resetFields()
       emit('update:modelValue', false)
@@ -86,7 +88,7 @@ export default {
       form.value.validate().then((valid) => {
         if (valid) {
           $axios.post(api, {
-            ...setProjectFormData
+            ...state.setProjectFormData
           }).then(res => {
             message.success(text)
             emit('success')
@@ -96,17 +98,18 @@ export default {
       })
     }
     watch(data, (newVal) => {
-      setProjectFormData.id = newVal.id
-      setProjectFormData.name = newVal.name
-      setProjectFormData.oldName = newVal.name
-      setProjectFormData.description = newVal.description || ''
+      state.setProjectFormData = {
+        id: newVal.id,
+        name: newVal.name,
+        oldName: newVal.name,
+        description: newVal.description || ''
+      }
     })
     watch(modelValue, (newVal) => {
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     return {
-      dialogVisible,
-      setProjectFormData,
+      ...toRefs(state),
       rules,
       form,
       handleClose,

@@ -78,7 +78,7 @@ import UploadUtil from '@/lib/upload'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message, Upload } from 'ant-design-vue'
-import { watch, ref, toRefs, readonly } from 'vue'
+import { watch, toRefs, readonly, reactive } from 'vue'
 import { useRoleListDic } from '../hooks'
 export default {
   name: 'set-project-dialog',
@@ -104,12 +104,14 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue, data } = toRefs(props)
+    const state = reactive({
+      dialogVisible: false,
+      nameBlockStatus: 0,
+      tickNameBlockStatus: 0,
+      imageUrl: ''
+    })
     const { roleList } = useRoleListDic()
-    const dialogVisible = ref(false)
-    const nameBlockStatus = ref(0)
-    const tickNameBlockStatus = ref(0)
     let userInfo = data
-    const imageUrl = ref('')
     const uploadApi = readonly($api.api.upload)
     const handleClose = () => {
       emit('update:modelValue', false)
@@ -131,9 +133,9 @@ export default {
       }
     }
     const handleAvatarSuccess = (res, file) => {
-      imageUrl.value = URL.createObjectURL(file)
+      state.imageUrl = URL.createObjectURL(file)
       message.success('上传头像图片成功!')
-      console.log(imageUrl.value)
+      console.log(state.imageUrl)
     }
     const beforeAvatarUpload = (file) => {
       const isJPG = file.type === 'image/jpeg'
@@ -179,17 +181,14 @@ export default {
     // 覆盖默认的上传行为
     const httprequest = () => {}
     watch(modelValue, (newVal) => {
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     watch(data, (newVal) => {
       userInfo = newVal
     })
     return {
-      dialogVisible,
       uploadApi,
       roleList,
-      nameBlockStatus,
-      tickNameBlockStatus,
       userInfo,
       saveFun,
       handleClose,

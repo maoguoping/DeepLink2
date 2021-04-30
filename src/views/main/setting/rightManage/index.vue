@@ -89,8 +89,10 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import RightEditDialog from './RightEditDialog'
-import { ref, onMounted, toRaw } from 'vue'
-import { usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
+import { onMounted, toRaw, toRefs, reactive } from 'vue'
+import { usePage } from '@/hooks/page'
+import { useTableSort } from '@/hooks/table'
+import { useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'rightManage',
   setup () {
@@ -104,8 +106,12 @@ export default {
         value: '12'
       }
     ]
+    const state = reactive({
+      loading: false,
+      rightList: [],
+      selectList: []
+    })
     const { page, handleSizeChange, handleCurrentChange, loadPage } = usePage(load)
-    const rightList = ref([])
     // 权限弹窗
     const rightEditDialog = useDetailModal('add')
     const showRightEditDialog = rightEditDialog.show
@@ -114,19 +120,15 @@ export default {
     const handleAddRight = rightEditDialog.openModal('add')
     const handleEdit = rightEditDialog.openInfoModal('edit')
     /**
-     * 表格选中项
-     */
-    const selectList = ref([])
-    /**
      * 删除权限回调
      * @return {void}
      */
     const handleDelRight = async () => {
-      if (selectList.value.length === 0) {
+      if (state.selectList.length === 0) {
         message.warning('请选择权限')
         return
       }
-      const ids = selectList.value.map(i => i.rightId)
+      const ids = state.selectList.map(i => i.rightId)
       try {
         await $axios.post($api.setting.deleteRight, {
           rightId: ids.join(',')
@@ -179,7 +181,7 @@ export default {
      * 表格选中事件
      */
     const handleSelectionChange = (list) => {
-      selectList.value = list
+      state.selectList = list
     }
     /**
      * 表格选中定义
@@ -217,7 +219,6 @@ export default {
       }
       loadPage()
     }
-    const loading = ref(false)
     /**
      * 加载函数
      */
@@ -235,7 +236,7 @@ export default {
       }
       console.log('请求接口')
       try {
-        loading.value = true
+        state.loading = true
         const res = await $axios.post($api.setting.getRightList, {
           rightId: rightId,
           rightName: rightName,
@@ -249,23 +250,22 @@ export default {
           item.createTime = Utils.timeFormat(new Date(item.createTime), 'yyyy-MM-dd hh:mm:ss') || ''
           return item
         })
-        rightList.value = result
+        state.rightList = result
         page.total = res.data.total
-        selectList.value = []
-        loading.value = false
+        state.selectList = []
+        state.loading = false
       } catch (err) {
-        loading.value = false
+        state.loading = false
         message.error(' 加载列表数据失败！')
       }
     }
     onMounted(() => { load() })
     return {
+      ...toRefs(state),
       page,
       handleSizeChange,
       handleCurrentChange,
       rowSelection,
-      selectList,
-      rightList,
       breadcrumbList,
       rightEditDialogType,
       editRightInfo,
@@ -276,7 +276,6 @@ export default {
       sortCol,
       sortOrder,
       handleSortChange,
-      loading,
       loadPage,
       resetForm,
       handleAddRight,

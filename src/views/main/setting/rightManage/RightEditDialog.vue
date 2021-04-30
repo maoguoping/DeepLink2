@@ -51,7 +51,7 @@
 import { message, Transfer } from 'ant-design-vue'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
-import { watch, ref, toRefs, reactive, readonly, toRaw } from 'vue'
+import { watch, toRefs, reactive, readonly, toRaw } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -80,23 +80,25 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue, data, type } = toRefs(props)
-    const dialogVisible = ref(false)
+    const state = reactive({
+      dialogVisible: false,
+      roleList: [],
+      ownRoleList: [],
+      rightInfo: {
+        rightId: '',
+        rightName: '',
+        description: '',
+        roleIds: [],
+        path: ''
+      }
+    })
     const transferTitle = readonly([
       '无权限角色',
       '有权限角色'
     ])
-    const roleList = ref([])
-    const ownRoleList = ref([])
-    const rightInfo = reactive({
-      rightId: '',
-      rightName: '',
-      description: '',
-      roleIds: [],
-      path: ''
-    })
     const getRoleListDic = async () => {
       const res = await $axios.get($api.api.getRoleListDic, {})
-      roleList.value = res.data.map(item => {
+      state.roleList = res.data.map(item => {
         return {
           ...item,
           key: item.id + '',
@@ -104,26 +106,26 @@ export default {
           // chosen: false
         }
       })
-      console.log('roleList.value', roleList.value)
+      console.log('state.roleList', state.roleList)
     }
     const getRoleByRight = async () => {
       try {
         const res = await $axios.post($api.setting.getRoleByRight, {
-          rightId: rightInfo.rightId
+          rightId: state.rightInfo.rightId
         })
         let roleIds = []
         if (res.list.length > 0) {
           roleIds = res.list.map(i => i.roleId)
         }
-        ownRoleList.value = res.list.map(i => i.roleId + '')
-        rightInfo.roleIds = roleIds
+        state.ownRoleList = res.list.map(i => i.roleId + '')
+        state.rightInfo.roleIds = roleIds
       } catch (err) {
         message.error('加载拥有权限的角色失败')
       }
     }
     const handleRoleChange = (targetKeys, direction, moveKeys) => {
       console.log(targetKeys, direction, moveKeys)
-      ownRoleList.value = targetKeys.map(i => i + '')
+      state.ownRoleList = targetKeys.map(i => i + '')
     }
     const getArrDifference = (arr1, arr2) => {
       let arr1Change = []
@@ -140,8 +142,8 @@ export default {
       }
     }
     const updateRight = async () => {
-      const { preview, after } = getArrDifference(rightInfo.roleIds, ownRoleList.value)
-      const { rightId } = rightInfo
+      const { preview, after } = getArrDifference(state.rightInfo.roleIds, state.ownRoleList)
+      const { rightId } = state.rightInfo
       try {
         await $axios.post($api.setting.changeRoleRight, {
           rightId: rightId,
@@ -156,8 +158,8 @@ export default {
     const addRight = async () => {
       try {
         await $axios.post($api.setting.addRight, {
-          ...rightInfo,
-          addRoleIds: ownRoleList.value.join(',')
+          ...state.rightInfo,
+          addRoleIds: state.ownRoleList.join(',')
         })
         emit('update', type.value)
       } catch (err) {
@@ -165,7 +167,7 @@ export default {
       }
     }
     const saveFun = async () => {
-      const { rightName, rightId } = toRaw(rightInfo)
+      const { rightName, rightId } = toRaw(state.rightInfo)
       if (rightName === '') {
         message.warning('权限名不能为空！')
       } else {
@@ -194,37 +196,34 @@ export default {
       emit('update:modelValue', false)
     }
     watch(modelValue, async (newVal) => {
-      console.log('roleList.value', roleList.value)
+      console.log('state.roleList', state.roleList)
       if (newVal) {
         await getRoleListDic()
-        console.log('roleList.value', roleList.value)
+        console.log('state.roleList', state.roleList)
         if (type.value === 'add') {
-          rightInfo.rightId = ''
-          rightInfo.rightName = ''
-          rightInfo.description = ''
-          dialogVisible.value = true
+          state.rightInfo.rightId = ''
+          state.rightInfo.rightName = ''
+          state.rightInfo.description = ''
+          state.dialogVisible = true
         } else {
           const { rightId, rightName, description, path } = data.value
-          rightInfo.rightId = rightId
-          rightInfo.rightName = rightName
-          rightInfo.description = description
-          rightInfo.path = path
+          state.rightInfo.rightId = rightId
+          state.rightInfo.rightName = rightName
+          state.rightInfo.description = description
+          state.rightInfo.path = path
           getRoleByRight()
         }
-        dialogVisible.value = true
+        state.dialogVisible = true
       } else {
-        dialogVisible.value = false
+        state.dialogVisible = false
       }
     })
     const filterMethod = (query, item) => {
       return item.name.indexOf(query) > -1
     }
     return {
-      dialogVisible,
+      ...toRefs(state),
       transferTitle,
-      rightInfo,
-      roleList,
-      ownRoleList,
       filterMethod,
       handleRoleChange,
       handleClose,

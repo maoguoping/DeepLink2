@@ -136,9 +136,11 @@ import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import SearchBox from '@/components/modules/SearchBox'
 import UserEditDialog from './UserEditDialog'
-import { ref, reactive, onMounted, toRaw } from 'vue'
+import { reactive, onMounted, toRaw, toRefs } from 'vue'
 import { message, Table, Pagination, Breadcrumb, DatePicker } from 'ant-design-vue'
-import { useRoleListDic, usePage, useTableSort, useSearchForm, useDetailModal } from '../hooks'
+import { usePage } from '@/hooks/page'
+import { useTableSort } from '@/hooks/table'
+import { useRoleListDic, useSearchForm, useDetailModal } from '../hooks'
 export default {
   name: 'userManage',
   setup () {
@@ -200,7 +202,6 @@ export default {
         slots: { customRender: 'action' }
       }
     ]
-    const userListData = ref([])
     // 用户详情弹框
     const userEditDialog = useDetailModal('edit')
     const userEditDialogType = userEditDialog.type
@@ -222,14 +223,16 @@ export default {
       createTime: [],
       lastLoginTime: []
     })
-    const labelCol = reactive({
-      span: 2
+    const state = reactive({
+      labelCol: {
+        span: 2
+      },
+      wrapperCol: {
+        span: 5
+      },
+      loading: false,
+      userListData: []
     })
-    const wrapperCol = reactive({
-      span: 5
-    })
-    console.debug(page.pageSize)
-    const loading = ref(false)
     /**
      * 加载函数
      */
@@ -256,7 +259,7 @@ export default {
         })
       }
       try {
-        loading.value = true
+        state.loading = true
         console.debug('roleId', roleId)
         const res = await $axios.post($api.setting.getUserList, {
           username,
@@ -276,12 +279,12 @@ export default {
           item.lastLoginTime = Utils.timeFormat(new Date(item.lastLoginTime), 'yyyy-MM-dd hh:mm:ss')
           return item
         })
-        userListData.value = result
+        state.userListData = result
         page.total = res.data.total
-        loading.value = false
+        state.loading = false
       } catch (err) {
         console.error(err)
-        loading.value = false
+        state.loading = false
         message.error('加载用户列表失败')
       }
     }
@@ -292,13 +295,13 @@ export default {
     } = useTableSort('username', 'ASC', load)
     onMounted(() => { load() })
     return {
+      ...toRefs(state),
       roleList,
       page,
       handleSizeChange,
       handleCurrentChange,
       breadcrumbList,
       columns,
-      userListData,
       editUserInfo,
       userEditDialogType,
       form,
@@ -306,9 +309,6 @@ export default {
       sortCol,
       sortOrder,
       handleSortChange,
-      labelCol,
-      wrapperCol,
-      loading,
       load,
       loadPage,
       resetForm,

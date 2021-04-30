@@ -26,7 +26,7 @@
 </template>
 <script>
 import { useStore } from 'vuex'
-import { watch, ref, toRefs, computed } from 'vue'
+import { watch, toRefs, computed, reactive } from 'vue'
 export default {
   name: 'set-project-dialog',
   props: {
@@ -38,8 +38,10 @@ export default {
   },
   setup (props, { emit }) {
     const { modelValue } = toRefs(props)
+    const state = reactive({
+      dialogVisible: false
+    })
     const store = useStore()
-    const dialogVisible = ref(false)
     const manageCenterInfo = computed(() => store.state.manageCenterStore.manageCenterInfo)
     const listInfo = computed(() => {
       return manageCenterInfo.value || {
@@ -62,13 +64,13 @@ export default {
       }
     })
     watch(modelValue, (newVal) => {
-      dialogVisible.value = newVal
+      state.dialogVisible = newVal
     })
     const handleClose = () => {
       emit('update:modelValue', false)
     }
     return {
-      dialogVisible,
+      ...toRefs(state),
       listInfo,
       handleClose
     }
