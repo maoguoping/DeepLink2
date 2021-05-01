@@ -63,7 +63,7 @@ import Utils from '@/lib/utils.js'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message, Dropdown, Table, Pagination, Tag, Menu } from 'ant-design-vue'
-import { reactive, toRefs, computed, watch } from 'vue'
+import { reactive, toRefs, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { usePage } from '@/hooks/page'
@@ -79,10 +79,7 @@ export default {
   },
   setup (props, { emit }) {
     const store = useStore()
-    const pathId = computed(() => store.state.manageCenterStore.pathId)
-    watch(pathId, (val) => {
-      console.log('watch val', val)
-    })
+    const pathId = computed(() => store.state.manageCenterStore.manageCenterPathId)
     const router = useRouter()
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
@@ -140,7 +137,7 @@ export default {
       emit('view-read', row)
       console.log('view-read', row)
       page.currentPage = 1
-      store.commit('changeManageCenterPath', {
+      store.dispatch('changeManageCenterPath', {
         pathId: row.pathId,
         pathName: decodeURI(row.path),
         type: row.type
@@ -149,7 +146,6 @@ export default {
         path: '/manageCenter',
         query: {
           pathId: Utils.pathStrEncode(row.pathId),
-          path: Utils.pathStrEncode(encodeURI(row.path)),
           type: row.type
         }
       })
@@ -180,7 +176,6 @@ export default {
      * @return {void}
      */
     async function loadViewData () {
-      console.log('loadViewData')
       try {
         state.loading = true
         const res = await $axios.post($api.manageCenter.getViewDataByPathId, {

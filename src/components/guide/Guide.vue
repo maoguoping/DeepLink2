@@ -50,7 +50,7 @@ export default {
     },
     handleNodeClick (data) {
       if (data.id != null) {
-        this.$router.push({ name: 'manageCenter', query: { path: data.path, type: data.type } })
+        this.$router.push({ name: 'manageCenter', query: { pathId: data.pathId, type: data.type } })
       }
     },
     filterNode (value, data) {

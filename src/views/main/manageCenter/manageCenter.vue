@@ -43,7 +43,7 @@
     </a-layout>
 </template>
 <script>
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import { message, Modal, Row } from 'ant-design-vue'
 import { PlusOutlined, ExclamationOutlined, DeleteOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import $axios from '@/lib/axios'
@@ -132,7 +132,7 @@ export default {
     'a-row': Row
   },
   methods: {
-    ...mapMutations([
+    ...mapActions([
       'changeManageCenterPath'
     ]),
     /**
@@ -329,7 +329,6 @@ export default {
     if (query.pathId && query.path) {
       this.changeManageCenterPath({
         pathId: Utils.pathStrDecode(query.pathId),
-        pathName: Utils.pathStrDecode(decodeURI(query.path)),
         type: query.path
       })
       const flag = (query.type !== 1)
@@ -338,7 +337,6 @@ export default {
     } else {
       this.changeManageCenterPath({
         pathId: '',
-        pathName: '',
         type: ''
       })
       this.defaultLoad = true

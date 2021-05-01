@@ -12,7 +12,7 @@
 
 <script>
 import { Breadcrumb } from 'ant-design-vue'
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import Utils from '@/lib/utils.js'
 export default {
   name: 'path-bar',
@@ -40,7 +40,7 @@ export default {
   created: function () {
   },
   methods: {
-    ...mapMutations([
+    ...mapActions([
       'changeManageCenterPath'
     ]),
     /**
@@ -84,7 +84,6 @@ export default {
           path: '/manageCenter',
           query: {
             pathId: Utils.pathStrEncode(pathId),
-            path: Utils.pathStrEncode(encodeURI(pathName)),
             type: 1
           }
         })
@@ -96,16 +95,15 @@ export default {
        * @param pathId {String} 路径id
        * @param pathName  {String} 路径文本
        */
-    changePathTo (pathId, pathName) {
-      this.changeManageCenterPath({
+    async changePathTo (pathId, pathName) {
+      await this.changeManageCenterPath({
         pathId: pathId,
-        pathName: pathName
+        type: ''
       })
       this.$router.push({
         path: '/manageCenter',
         query: {
-          pathId: Utils.pathStrEncode(pathId),
-          path: Utils.pathStrEncode(pathName)
+          pathId: Utils.pathStrEncode(pathId)
         }
       })
       this.$emit('path-link-to', name)
