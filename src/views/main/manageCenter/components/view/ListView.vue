@@ -63,7 +63,7 @@ import Utils from '@/lib/utils.js'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message, Dropdown, Table, Pagination, Tag, Menu } from 'ant-design-vue'
-import { reactive, toRefs, computed } from 'vue'
+import { reactive, toRefs, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { usePage } from '@/hooks/page'
@@ -79,6 +79,7 @@ export default {
   },
   setup (props, { emit }) {
     const store = useStore()
+    const { defaultLoad } = toRefs(props)
     const pathId = computed(() => store.state.manageCenterStore.manageCenterPathId)
     const router = useRouter()
     const rowSelection = {
@@ -155,19 +156,34 @@ export default {
      */
     const handleCommand = ({ key }, record) => {
       console.log(key, record)
-      switch (key) {
-        case 'edit': {
-          emit('edit', record)
-          break
-        }
-        case 'delete': {
-          emit('delete', record)
-          break
-        }
-        case 'move': {
-          emit('move', record)
-          break
-        }
+      emit(key, record)
+    }
+    /**
+     * 选择变化回调
+     * @param {Array} valList 返回id列表
+     * @return {void}
+     */
+    const handleSelectionChange = (valList) => {
+      state.multipleSelection = valList
+      emit('mul-section', valList)
+    }
+    const filterTag = (value, row) => {
+      return row.tag === value
+    }
+    /**
+     * 表格行class生成
+     * @param row
+     * @param rowIndex
+     * @return {string}
+     */
+    const tableRowClassName = (record, index) => {
+      console.log('record', record)
+      if (record.typeId === 0) {
+        return 'folder'
+      } else if (record.typeId === 1) {
+        return 'element'
+      } else {
+        return 'project'
       }
     }
     // const pathStr = computed(() => store.state.manageCenterStore.manageCenterPath)
@@ -205,6 +221,20 @@ export default {
         message.error('加载数据错误')
       }
     }
+    onMounted(() => {
+      //            var path=""
+    //            if(manageCenterName!=this.pathStr){
+    //                path=this.pathStr;
+    //            }
+    //            this.   (path);
+      defaultLoad.value && loadPage()
+    })
+    watch(pathId, (val) => {
+      loadViewData()
+    })
+    watch(defaultLoad, (val) => {
+      val && loadPage()
+    })
     return {
       ...toRefs(state),
       pathId,
@@ -218,7 +248,10 @@ export default {
       sortOrder,
       handleSortChange,
       handleRead,
-      handleCommand
+      handleCommand,
+      handleSelectionChange,
+      filterTag,
+      tableRowClassName
     }
   },
   components: {
@@ -228,55 +261,6 @@ export default {
     'a-tag': Tag,
     'a-menu': Menu,
     'a-menu-item': Menu.Item
-  },
-  methods: {
-    /**
-     * 选择变化回调
-     * @param {Array} valList 返回id列表
-     * @return {void}
-     */
-    handleSelectionChange (valList) {
-      this.multipleSelection = valList
-      this.$emit('mul-section', valList)
-    },
-    filterTag (value, row) {
-      return row.tag === value
-    },
-    /**
-     * 表格行class生成
-     * @param row
-     * @param rowIndex
-     * @return {string}
-     */
-    tableRowClassName (record, index) {
-      console.log('record', record)
-      if (record.typeId === 0) {
-        return 'folder'
-      } else if (record.typeId === 1) {
-        return 'element'
-      } else {
-        return 'project'
-      }
-    }
-  },
-  created () {},
-  mounted () {
-    //            var path=""
-    //            if(manageCenterName!=this.pathStr){
-    //                path=this.pathStr;
-    //            }
-    //            this.   (path);
-    this.defaultLoad && this.loadPage()
-  },
-  watch: {
-    pathId (val) {
-      console.log('watch pathId', val)
-      this.loadViewData()
-    },
-    defaultLoad (val) {
-      console.log('watch defaultLoad', val)
-      val && this.loadPage()
-    }
   }
 }
 </script>

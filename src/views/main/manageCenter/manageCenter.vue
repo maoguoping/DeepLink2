@@ -43,7 +43,8 @@
     </a-layout>
 </template>
 <script>
-import { mapState, mapActions } from 'vuex'
+import { useRoute } from 'vue-router'
+import { mapActions, useStore } from 'vuex'
 import { message, Modal, Row } from 'ant-design-vue'
 import { PlusOutlined, ExclamationOutlined, DeleteOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import $axios from '@/lib/axios'
@@ -57,11 +58,13 @@ import SetProjectDialog from './components/dialog/setProjectDialog.vue'
 import SetModuleDialog from './components/dialog/setModuleDialog.vue'
 import ListInfoDialog from './components/dialog/listInfoDialog.vue'
 import ShareQRCodeDialog from './components/dialog/shareQRCodeDialog'
-import { reactive, toRefs } from 'vue'
+import { reactive, toRefs, computed, ref, onMounted } from 'vue'
 export default {
   name: 'manage-center',
   setup () {
     console.log('data')
+    const route = useRoute()
+    const store = useStore()
     const state = reactive({
       docId: '1519187825477',
       currentItem: {},
@@ -102,17 +105,245 @@ export default {
       defaultLoad: false,
       currentUrl: window.location.href
     })
-    return {
-      ...toRefs(state)
+    const pathStr = computed(() => store.state.manageCenterStore.manageCenterPath)
+    const pathId = computed(() => store.state.manageCenterStore.manageCenterPathId)
+    const isMainList = computed(() => pathId.value === '')
+    const pathBar = ref(null)
+    const listView = ref(null)
+    /**
+     * 子组件查看回调函数
+     * @param item
+     */
+    const readView = (item) => {
+      if (item.type === '1') {
+        state.isManageBox = false
+        state.isDocView = false
+        state.isElement = true
+      }
     }
-  },
-  computed: {
-    ...mapState({
-      pathStr: state => state.manageCenterStore.manageCenterPath,
-      pathId: state => state.manageCenterStore.manageCenterPathId
-    }),
-    isMainList () {
-      return this.pathId === ''
+    /**
+     * 面包屑跳转拦截
+     * @param pathId {String} 路径id
+     * @param pathName  {String} 路径文本
+     */
+    const beforePathChange = (pathId, pathName) => {
+      let flag = false
+      if (state.isElement) {
+        flag = true
+      } else if (state.isDocEdit) {
+        Modal.confirm({
+          title: '提示',
+          content: '确定离开?',
+          okText: '确定',
+          cancelText: '取消',
+          okType: 'warning',
+          onOK: () => {
+            //                flag = true;
+            // 调用子组件的路径改变函数
+            pathBar.value.changePathTo(pathId, pathName)
+          }
+        })
+      } else {
+        flag = true
+      }
+      return flag
+    }
+    /**
+     * 面包屑跳转
+     * @param name
+     */
+    const pathLinkTo = (name) => {
+      if (state.isElement) {
+        state.isElement = false
+        state.isManageBox = true
+      }
+    }
+    /**
+     * 多选回调
+     * @param {Array} selection 选择列表
+     * @return {void}
+     */
+    const handlemulSection = (selection) => {
+      state.selectionList = selection
+    }
+    /**
+     * 视图改变事件
+     * @param {Object} event
+     * @return {void}
+     */
+    const handleViewChange = (event) => {
+      state.viewDescription = event.viewDescription
+    }
+    /**
+     * 添加按钮回调
+     * @return {void}
+     */
+    const handleAddItem = () => {
+      const setObj = {
+        type: 'add',
+        name: '',
+        description: ''
+      }
+      if (this.isMainList) {
+        state.setProjectDialogData = setObj
+        state.showSetProjectDialog = true
+      } else {
+        state.setModuleDialogData = setObj
+        state.showSetModuleDialog = true
+      }
+    }
+    /**
+     * 子组件编辑回调函数
+     * @param {Object} item
+     * @return {void}
+     */
+    const handleEditItem = (item) => {
+      const setObj = {
+        type: 'edit',
+        id: item.id,
+        name: item.name,
+        description: item.description
+      }
+      if (state.isMainList) {
+        state.setProjectDialogData = setObj
+        state.showSetProjectDialog = true
+      } else {
+        setObj.typeId = item.typeId
+        state.setModuleDialogData = setObj
+        state.showSetModuleDialog = true
+      }
+    }
+    /**
+     * 子组件删除回调函数
+     * @param {Object} item
+     * @return {void}
+     */
+    const handleDelete = (item) => {
+      Modal.confirm({
+        title: '提示',
+        content: '确定删除?',
+        okText: '确定',
+        cancelText: '取消',
+        onOk: async () => {
+          try {
+            const api = state.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
+            await $axios.post(api, {
+              id: [item.id]
+            })
+            message.success('删除成功')
+            if (state.viewType === 'listView') {
+              listView.value.updateView()
+            }
+          } catch (err) {
+            message.error('删除失败')
+          }
+        }
+      })
+    }
+    /**
+     * 批量删除回调函数
+     * @return {void}
+     */
+    const handleMulDelete = () => {
+      if (state.selectionList.length === 0) {
+        message.warning('请选择至少一条')
+      } else {
+        const list = state.selectionList.map(item => {
+          return item.id
+        })
+        Modal.confirm({
+          title: '提示',
+          content: '确定删除?',
+          okText: '确定',
+          cancelText: '取消',
+          onOK: async () => {
+            try {
+              const api = state.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
+              await $axios.post(api, {
+                id: list
+              })
+              message.success('删除成功')
+              if (state.viewType === 'listView') {
+                listView.value.updateView()
+              }
+            } catch (err) {
+              message.error('删除失败')
+            }
+          }
+        })
+      }
+    }
+    /**
+     * 添加项目成功回调
+     * @return {void}
+     */
+    const handleAddProjectSuccess = () => {
+      if (state.viewType === 'listView') {
+        listView.value.updateView()
+      }
+    }
+    /**
+     * 设置项目成功回调
+     * @return {void}
+     */
+    const handleSetModuleSuccess = () => {
+      if (state.viewType === 'listView') {
+        listView.value.updateView()
+      }
+    }
+    /**
+     * 查看列表信息
+     * @return {Void}
+     */
+    const handleShowInfo = () => {
+      state.showListInfoDialog = true
+    }
+    /**
+     * 分享按钮回调
+     * @return {void}
+     */
+    const handleShareBtn = () => {
+      state.currentUrl = decodeURI(window.location.href)
+      state.showShareTip = true
+    }
+    onMounted(() => {
+      const query = route.query
+      if (query.pathId && query.path) {
+        store.dispatch('changeManageCenterPath', {
+          pathId: Utils.pathStrDecode(query.pathId),
+          type: query.path
+        })
+        const flag = (query.type !== 1)
+        state.isElement = !flag
+        state.isManageBox = flag
+      } else {
+        store.dispatch('changeManageCenterPath', {
+          pathId: '',
+          type: ''
+        })
+        state.defaultLoad = true
+      }
+    })
+    return {
+      pathBar,
+      listView,
+      ...toRefs(state),
+      pathStr,
+      pathId,
+      isMainList,
+      readView,
+      beforePathChange,
+      pathLinkTo,
+      handlemulSection,
+      handleViewChange,
+      handleAddItem,
+      handleEditItem,
+      handleDelete,
+      handleMulDelete,
+      handleShowInfo,
+      handleAddProjectSuccess,
+      handleSetModuleSuccess,
+      handleShareBtn
     }
   },
   components: {
@@ -134,213 +365,7 @@ export default {
   methods: {
     ...mapActions([
       'changeManageCenterPath'
-    ]),
-    /**
-           * 子组件查看回调函数
-           * @param item
-           */
-    readView (item) {
-      if (item.type === '1') {
-        this.isManageBox = false
-        this.isDocView = false
-        this.isElement = true
-      }
-    },
-    /**
-           * 面包屑跳转拦截
-           * @param pathId {String} 路径id
-           * @param pathName  {String} 路径文本
-           */
-    beforePathChange (pathId, pathName) {
-      let flag = false
-      if (this.isElement) {
-        flag = true
-      } else if (this.isDocEdit) {
-        Modal.confirm({
-          title: '提示',
-          content: '确定离开?',
-          okText: '确定',
-          cancelText: '取消',
-          okType: 'warning',
-          onOK: () => {
-            //                flag = true;
-            // 调用子组件的路径改变函数
-            this.$refs.pathBar.changePathTo(pathId, pathName)
-          }
-        })
-      } else {
-        flag = true
-      }
-      return flag
-    },
-    /**
-           * 面包屑跳转
-           * @param name
-           */
-    pathLinkTo (name) {
-      if (this.isElement) {
-        this.isElement = false
-        this.isManageBox = true
-      }
-    },
-    /**
-           * 多选回调
-           * @param {Array} selection 选择列表
-           * @return {void}
-           */
-    handlemulSection (selection) {
-      this.selectionList = selection
-    },
-    /**
-           * 视图改变事件
-           * @param {Object} event
-           * @return {void}
-           */
-    handleViewChange (event) {
-      this.viewDescription = event.viewDescription
-    },
-    /**
-           * 添加按钮回调
-           * @return {void}
-           */
-    handleAddItem () {
-      const setObj = {
-        type: 'add',
-        name: '',
-        description: ''
-      }
-      if (this.isMainList) {
-        this.setProjectDialogData = setObj
-        this.showSetProjectDialog = true
-      } else {
-        this.setModuleDialogData = setObj
-        this.showSetModuleDialog = true
-      }
-    },
-    /**
-           * 子组件编辑回调函数
-           * @param {Object} item
-           * @return {void}
-           */
-    handleEditItem (item) {
-      const setObj = {
-        type: 'edit',
-        id: item.id,
-        name: item.name,
-        description: item.description
-      }
-      if (this.isMainList) {
-        this.setProjectDialogData = setObj
-        this.showSetProjectDialog = true
-      } else {
-        setObj.typeId = item.typeId
-        this.setModuleDialogData = setObj
-        this.showSetModuleDialog = true
-      }
-    },
-    /**
-     * 子组件删除回调函数
-     * @param {Object} item
-     * @return {void}
-     */
-    handleDelete (item) {
-      Modal.confirm({
-        title: '提示',
-        content: '确定删除?',
-        okText: '确定',
-        cancelText: '取消',
-        onOk: async () => {
-          try {
-            const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
-            await $axios.post(api, {
-              id: [item.id]
-            })
-            message.success('删除成功')
-            this.$refs[this.viewType].updateView()
-          } catch (err) {
-            message.error('删除失败')
-          }
-        }
-      })
-    },
-    /**
-           * 批量删除回调函数
-           * @return {void}
-           */
-    handleMulDelete () {
-      if (this.selectionList.length === 0) {
-        message.warning('请选择至少一条')
-      } else {
-        const list = this.selectionList.map(item => {
-          return item.id
-        })
-        Modal.confirm({
-          title: '提示',
-          content: '确定删除?',
-          okText: '确定',
-          cancelText: '取消',
-          onOK: async () => {
-            try {
-              const api = this.isMainList ? $api.manageCenter.deleteProject : $api.manageCenter.deleteModule
-              await $axios.post(api, {
-                id: list
-              })
-              message.success('删除成功')
-              this.$refs[this.viewType].updateView()
-            } catch (err) {
-              message.error('删除失败')
-            }
-          }
-        })
-      }
-    },
-    /**
-           * 查看列表信息
-           * @return {Void}
-           */
-    handleShowInfo () {
-      this.showListInfoDialog = true
-    },
-    /**
-           * 添加项目成功回调
-           * @return {void}
-           */
-    handleAddProjectSuccess () {
-      this.$refs[this.viewType].updateView()
-    },
-    /**
-           * 设置项目成功回调
-           * @return {void}
-           */
-    handleSetModuleSuccess () {
-      this.$refs[this.viewType].updateView()
-    },
-    /**
-     * 分享按钮回调
-     * @return {void}
-     */
-    handleShareBtn () {
-      this.currentUrl = decodeURI(window.location.href)
-      this.showShareTip = true
-    }
-  },
-  mounted () {
-    const query = this.$route.query
-    if (query.pathId && query.path) {
-      this.changeManageCenterPath({
-        pathId: Utils.pathStrDecode(query.pathId),
-        type: query.path
-      })
-      const flag = (query.type !== 1)
-      this.isElement = !flag
-      this.isManageBox = flag
-    } else {
-      this.changeManageCenterPath({
-        pathId: '',
-        type: ''
-      })
-      this.defaultLoad = true
-    }
+    ])
   },
   beforeRouteLeave (to, from, next) {
     // 导航离开该组件的对应路由时调用

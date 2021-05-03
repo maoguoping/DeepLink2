@@ -151,9 +151,7 @@ export default {
           cancelText: '取消',
           okType: 'warning',
           onOK() {
-            // this.$router.push({name:"manageCenter",query:{path:this.docData.path,type:'doc'}});
             this.$emit('close')
-            // this.displayFlag=false;
           }
         })
       }
