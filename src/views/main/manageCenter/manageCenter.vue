@@ -22,8 +22,14 @@
                         </a-button>
                     </a-row>
                 </div>
+                <div class="view-type-box">
+                  <span class="view-type-label">展示方式</span>
+                  <a :class="{selected: viewType==='listView'}" @click="changeView('listView')">列表</a>
+                  <a :class="{selected: viewType==='cardView'}" @click="changeView('cardView')">卡片</a>
+                </div>
                 <div class="manger-content">
                     <ListView ref="listView"
+                      v-if="viewType==='listView'"
                       :default-load="defaultLoad"
                       @view-read="readView"
                       @edit="handleEditItem"
@@ -31,6 +37,15 @@
                       @on-change="handleViewChange"
                       @mul-section="handlemulSection"
                     ></ListView>
+                    <CardView ref="cardView"
+                      v-if="viewType==='cardView'"
+                      :default-load="defaultLoad"
+                      @view-read="readView"
+                      @edit="handleEditItem"
+                      @delete="handleDelete"
+                      @on-change="handleViewChange"
+                      @mul-section="handlemulSection"
+                    ></CardView>
                 </div>
             </div>
             <Element v-if="isElement"></Element>
@@ -52,6 +67,7 @@ import $api from '@/lib/interface'
 import Utils from '@/lib/utils.js'
 import PathBar from '@/components/bar/PathBar.vue'
 import ListView from './components/view/ListView.vue'
+import CardView from './components/view/CardView.vue'
 import Element from './element/Element.vue'
 // import DocEditDialog from './components/dialog/docEditDialog.vue'
 import SetProjectDialog from './components/dialog/setProjectDialog.vue'
@@ -71,7 +87,7 @@ export default {
       listItems: [],
       activeNames: [],
       selectionList: [],
-      viewType: 'listView',
+      viewType: 'cardView',
       viewDescription: '',
       isManageBox: true,
       isDocView: false,
@@ -110,6 +126,7 @@ export default {
     const isMainList = computed(() => pathId.value === '')
     const pathBar = ref(null)
     const listView = ref(null)
+    const cardView = ref(null)
     /**
      * 子组件查看回调函数
      * @param item
@@ -266,6 +283,9 @@ export default {
               if (state.viewType === 'listView') {
                 listView.value.updateView()
               }
+              if (state.viewType === 'cardView') {
+                cardView.value.updateView()
+              }
             } catch (err) {
               message.error('删除失败')
             }
@@ -281,6 +301,9 @@ export default {
       if (state.viewType === 'listView') {
         listView.value.updateView()
       }
+      if (state.viewType === 'cardView') {
+        cardView.value.updateView()
+      }
     }
     /**
      * 设置项目成功回调
@@ -290,6 +313,13 @@ export default {
       if (state.viewType === 'listView') {
         listView.value.updateView()
       }
+      if (state.viewType === 'cardView') {
+        cardView.value.updateView()
+      }
+    }
+    const changeView = (viewType) => {
+      state.defaultLoad = true
+      state.viewType = viewType
     }
     /**
      * 查看列表信息
@@ -327,6 +357,7 @@ export default {
     return {
       pathBar,
       listView,
+      cardView,
       ...toRefs(state),
       pathStr,
       pathId,
@@ -343,13 +374,15 @@ export default {
       handleShowInfo,
       handleAddProjectSuccess,
       handleSetModuleSuccess,
-      handleShareBtn
+      handleShareBtn,
+      changeView
     }
   },
   components: {
     // 在#app元素内，注册组件
     PathBar,
     ListView,
+    CardView,
     SetProjectDialog,
     SetModuleDialog,
     ListInfoDialog,
@@ -410,8 +443,25 @@ export default {
               }
             }
             .view-description-box{
-                display: inline-block;
+              display: inline-block;
             }
+        }
+        .view-type-box {
+          font-size: 12px;
+          display: flex;
+          padding-left: 20px;
+          margin-bottom: 20px;
+          .view-type-label {
+            margin-right: 15px;
+          }
+          a {
+            cursor: pointer;
+            margin-right: 5px;
+            color:#7f7f7f;
+            &.selected {
+              color: #1890ff;
+            }
+          }
         }
     }
 

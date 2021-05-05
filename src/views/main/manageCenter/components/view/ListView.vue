@@ -63,11 +63,11 @@ import Utils from '@/lib/utils.js'
 import $axios from '@/lib/axios'
 import $api from '@/lib/interface'
 import { message, Dropdown, Table, Pagination, Tag, Menu } from 'ant-design-vue'
-import { reactive, toRefs, computed, onMounted, watch } from 'vue'
+import { reactive, toRefs, computed, watch } from 'vue'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
 import { usePage } from '@/hooks/page'
 import { useTableSort } from '@/hooks/table'
+import { useView } from './hooks'
 export default {
   name: 'list-view',
   props: {
@@ -81,7 +81,6 @@ export default {
     const store = useStore()
     const { defaultLoad } = toRefs(props)
     const pathId = computed(() => store.state.manageCenterStore.manageCenterPathId)
-    const router = useRouter()
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
@@ -100,6 +99,9 @@ export default {
       msg: 'Welcome to Your Vue.js App',
       multipleSelection: [],
       loading: false
+    })
+    const { handleRead, handleCommand } = useView(emit, page, defaultLoad, () => {
+      loadPage()
     })
     const columns = [
       {
@@ -129,35 +131,6 @@ export default {
         slots: { customRender: 'action' }
       }
     ]
-    /**
-     *查看事件
-     * @param {Object} row 行数据
-     * @return {void}
-     */
-    const handleRead = (row) => {
-      emit('view-read', row)
-      console.log('view-read', row)
-      page.currentPage = 1
-      store.dispatch('changeManageCenterPath', {
-        pathId: row.pathId,
-        pathName: decodeURI(row.path),
-        type: row.type
-      })
-      router.push({
-        path: '/manageCenter',
-        query: {
-          pathId: Utils.pathStrEncode(row.pathId),
-          type: row.type
-        }
-      })
-    }
-    /**
-     *下拉框事件
-     */
-    const handleCommand = ({ key }, record) => {
-      console.log(key, record)
-      emit(key, record)
-    }
     /**
      * 选择变化回调
      * @param {Array} valList 返回id列表
@@ -221,19 +194,8 @@ export default {
         message.error('加载数据错误')
       }
     }
-    onMounted(() => {
-      //            var path=""
-    //            if(manageCenterName!=this.pathStr){
-    //                path=this.pathStr;
-    //            }
-    //            this.   (path);
-      defaultLoad.value && loadPage()
-    })
     watch(pathId, (val) => {
       loadViewData()
-    })
-    watch(defaultLoad, (val) => {
-      val && loadPage()
     })
     return {
       ...toRefs(state),
