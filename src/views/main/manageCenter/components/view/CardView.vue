@@ -239,9 +239,14 @@ export default {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
+    background-color: #fff;
     .card-item {
       width: 300px;
       margin: 20px;
+      background-color: #F5F6CE;
+      &:hover {
+        background-color: #F3F781;
+      }
       .icon-arrow-down {
         width: 20px;
         height: 20px;
