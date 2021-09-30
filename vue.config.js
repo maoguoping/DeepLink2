@@ -23,7 +23,7 @@ module.exports = {
   outputDir: process.env.outputDir,
   assetsDir: 'static',
   productionSourceMap: false,
-  parallel: require('os').cpus().length > 1, 
+  parallel: require('os').cpus().length > 1,
   chainWebpack: config => {
     /* 添加分析工具 */
     const splitChunksConfig = {
@@ -69,9 +69,8 @@ module.exports = {
     } else {}
     config.optimization.runtimeChunk = true
     // 移除 prefetch 插件
-   
     config.plugins.delete('prefetch')
-    
+
     config.optimization.splitChunks(splitChunksConfig)
 
   // 或者
@@ -87,7 +86,6 @@ module.exports = {
     host: 'localhost',
     port: 8080,
     https: false,
-    hotOnly: false,
     proxy: {
       '/api': {
         target: rootUrl, // 设置调用接口域名和端口号别忘了加http
@@ -144,14 +142,14 @@ module.exports = {
   configureWebpack: (config) => {
     if (isProduction) {
       console.log('生产环境打包')
-    // 为生产环境修改配置...
+      // 为生产环境修改配置...
       config.mode = 'production'
       return {
         externals: {
-          'vue': 'Vue',
-          'vuex': 'Vuex',
+          vue: 'Vue',
+          vuex: 'Vuex',
           'vue-router': 'VueRouter',
-          'axios': 'axios'
+          axios: 'axios'
         },
         module: {
           rules: [

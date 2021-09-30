@@ -86,8 +86,12 @@ export default {
       commit('userToken', token)
     },
     async setUserInfo ({ commit }) {
-      const res = await axios.get(interfaceUrl.users.loginStatus, {})
-      commit('userInfo', res.userInfo)
+      try {
+        const res = await axios.get(interfaceUrl.users.loginStatus, {})
+        commit('userInfo', res.userInfo)
+      } catch (err) {
+        console.error(err)
+      }
     },
     async getPageAcceessList ({ commit, state }) {
       const res = await axios.post(interfaceUrl.users.getPageAcceessList, {

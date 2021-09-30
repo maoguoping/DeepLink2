@@ -1,6 +1,6 @@
 <template>
   <a-layout class="setting">
-    <a-layout-header class="settingHeader " style="height: 30px;background-color: #f0f2f5">
+    <a-layout-header class="settingHeader" style="height: 30px;background-color: #f0f2f5">
       设置菜单
     </a-layout-header>
     <a-layout>
