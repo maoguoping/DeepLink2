@@ -9,11 +9,15 @@
 <script>
 import { ConfigProvider } from 'ant-design-vue'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
+import { reactive, toRefs } from 'vue'
 export default {
   name: 'app', // name属性作为组件名称，全局 ID 自动作为组件的 name
-  data () {
-    return {
+  setup () {
+    const state = reactive({
       locale: zhCN
+    })
+    return {
+      ...toRefs(state)
     }
   },
   components: {

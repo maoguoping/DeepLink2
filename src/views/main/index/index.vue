@@ -21,10 +21,11 @@
 <script>
 // import DocLink from '@/components/main/docView/DocLink.vue'
 import { Carousel } from 'ant-design-vue'
+import { reactive, toRefs } from 'vue'
 export default {
   name: 'doc-index',
-  data () {
-    return {
+  setup (props, { emit }) {
+    const state = reactive({
       msg: 'Welcome to Your Vue.js App',
       listName: '大渣好，我系...',
       picList: [
@@ -44,6 +45,9 @@ export default {
           title: '战地'
         }
       ]
+    })
+    return {
+      ...toRefs(state)
     }
   },
   components: {

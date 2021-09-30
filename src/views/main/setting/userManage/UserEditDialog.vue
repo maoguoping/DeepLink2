@@ -181,12 +181,14 @@ export default {
     // 覆盖默认的上传行为
     const httprequest = () => {}
     watch(modelValue, (newVal) => {
+      console.log('modelValue', modelValue)
       state.dialogVisible = newVal
     })
     watch(data, (newVal) => {
       userInfo = newVal
     })
     return {
+      ...toRefs(state),
       uploadApi,
       roleList,
       userInfo,

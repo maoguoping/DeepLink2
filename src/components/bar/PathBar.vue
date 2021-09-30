@@ -12,7 +12,9 @@
 
 <script>
 import { Breadcrumb } from 'ant-design-vue'
-import { mapState, mapActions } from 'vuex'
+import { computed, toRefs } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import Utils from '@/lib/utils.js'
 export default {
   name: 'path-bar',
@@ -26,87 +28,83 @@ export default {
       }
     }
   },
-  data () {
-    return {
-    }
-  },
-  computed: {
-    ...mapState({
-      pathStr: state => state.manageCenterStore.manageCenterPath,
-      pathId: state => state.manageCenterStore.manageCenterPathId,
-      pathData: state => state.manageCenterStore.manageCenterPathInfo
-    })
-  },
-  created: function () {
-  },
-  methods: {
-    ...mapActions([
-      'changeManageCenterPath'
-    ]),
-    /**
-       *路径字符串转路径数组
-       * @param pathStr
-       */
-    pathChange (pathStr) {
+  setup (props, { emit }) {
+    const { beforeChange } = toRefs(props)
+    const store = useStore()
+    const router = useRouter()
+    const pathStr = computed(() => store.state.manageCenterStore.manageCenterPath)
+    const pathId = computed(() => store.state.manageCenterStore.manageCenterPathId)
+    const pathData = computed(() => store.state.manageCenterStore.manageCenterPathInfo)
+    const changeManageCenterPath = (pathInfo) => store.dispatch('changeManageCenterPath', pathInfo)
+    const pathChange = (pathStr) => {
       let docPath = []
-      if (this.pathStr) {
-        docPath = this.pathStr.split('/')
+      if (pathStr) {
+        docPath = pathStr.split('/')
         docPath[0] = '管理中心'
       } else {
         docPath = ['管理中心']
       }
       return docPath
-    },
+    }
     /**
        * 从组件内部调用链接地址切换
        * @param index {Number}
        */
-    pathLinkTo (index) {
+    const pathLinkTo = (index) => {
       let pathId = ''
 
       let pathName = ''
       if (index === 0) {
         pathName = '管理中心'
       } else {
-        this.pathData.slice(1, index + 1).forEach(item => {
+        pathData.value.slice(1, index + 1).forEach(item => {
           pathId += `/${item.value}`
           pathName += `/${item.label}`
         })
       }
       // 链接是否可以点击默认为
-      if (this.beforeChange(pathName)) {
-        this.changeManageCenterPath({
+      if (beforeChange.value(pathName)) {
+        changeManageCenterPath({
           pathId: pathId,
           pathName: pathName,
           type: 1
         })
-        this.$router.push({
+        router.push({
           path: '/manageCenter',
           query: {
             pathId: Utils.pathStrEncode(pathId),
             type: 1
           }
         })
-        this.$emit('path-link-to', { pathId: pathId, pathName: pathName, type: 1 })
+        emit('path-link-to', { pathId: pathId, pathName: pathName, type: 1 })
       }
-    },
+    }
     /**
        * 从父组件调用链接地址切换
        * @param pathId {String} 路径id
        * @param pathName  {String} 路径文本
        */
-    async changePathTo (pathId, pathName) {
-      await this.changeManageCenterPath({
-        pathId: pathId,
+    const changePathTo = async (pathId, pathName) => {
+      await changeManageCenterPath({
+        pathId,
         type: ''
       })
-      this.$router.push({
+      router.push({
         path: '/manageCenter',
         query: {
           pathId: Utils.pathStrEncode(pathId)
         }
       })
-      this.$emit('path-link-to', name)
+      emit('path-link-to', name)
+    }
+    return {
+      pathStr,
+      pathId,
+      pathData,
+      changeManageCenterPath,
+      pathChange,
+      pathLinkTo,
+      changePathTo
     }
   },
   components: {

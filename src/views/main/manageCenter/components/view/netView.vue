@@ -8,13 +8,17 @@
 </template>
 <script>
 import PathBar from '../bar/PathBar.vue'
+import { reactive, toRefs } from 'vue'
 export default {
   name: 'manger-center',
-  data () {
-    return {
+  setup () {
+    const state = reactive({
       msg: 'Welcome to Your Vue.js App',
       listName: '大渣好，我系...',
       pathStr: ''
+    })
+    return {
+      ...toRefs(state)
     }
   },
   components: {

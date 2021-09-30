@@ -35,27 +35,23 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapMutations } from 'vuex'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import { message, Dropdown, Menu } from 'ant-design-vue'
-import { ref } from 'vue'
+import { reactive, toRefs, computed, onMounted, watch } from 'vue'
 export default {
   name: 'header-bar',
   setup () {
-    const tabActiveIndex = ref(0)
-    return {
-      msg: 'Welcome to Your Vue.js App',
-      tabActiveIndex
-    }
-  },
-  computed: {
-    ...mapState({
-      activeName: state => state.headerBar.headerBarCurrentMenu,
-      userInfo: state => state.platform.userInfo
-    }),
-    ...mapGetters([
-      'isAdmin'
-    ]),
-    tabList () {
+    const store = useStore()
+    const router = useRouter()
+    const state = reactive({
+      tabActiveIndex: 0,
+      msg: 'Welcome to Your Vue.js App'
+    })
+    const activeName = computed(() => store.state.headerBar.headerBarCurrentMenu)
+    const userInfo = computed(() => store.state.platform.userInfo)
+    const isAdmin = computed(() => store.getters.isAdmin)
+    const tabList = computed(() => {
       const allList = [
         {
           name: '首页',
@@ -76,7 +72,7 @@ export default {
           display: true
         }
       ]
-      if (this.isAdmin) {
+      if (isAdmin.value) {
         allList.push({
           name: '设置',
           path: '/setting',
@@ -85,55 +81,52 @@ export default {
         })
       }
       return allList
+    })
+    const changeHeaderBarCurrentMenu = path => store.commit('changeHeaderBarCurrentMenu', path)
+    const handleClick = (e) => {
+      changeHeaderBarCurrentMenu(e.path)
+      router.push({ path: e.path, params: '2018022001' })
     }
-  },
-  methods: {
-    ...mapMutations([
-      'changeHeaderBarCurrentMenu'
-    ]),
-    /**
-       * tab页点击事件
-       * @param e {Obj} 点击事件
-       */
-    handleClick (e) {
-      this.changeHeaderBarCurrentMenu(e.path)
-      this.$router.push({ path: e.path, params: '2018022001' })
-    },
-    /**
-       * 用户头像下拉框回调
-       * @param command {String} 指令
-       */
-    userDropDown (command) {
-      if (command === 'logout') {
-        this.logout()
-      }
-    },
     /*
        * 退出登录
        */
-    async logout () {
-      await this.$store.dispatch('logout', (res) => {
+    const logout = async () => {
+      await store.dispatch('logout', (res) => {
         console.log('手动回登录页')
         if (!res.success) {
           message.error(res.message)
         } else {
-          this.$router.push({
+          router.push({
             path: '/login'
           })
         }
       })
     }
-  },
-  mounted () {
-    const path = this.$route.path
-    const activeName = (path === '/') ? '/index' : path
-    this.changeHeaderBarCurrentMenu(activeName)
-  },
-  watch: {
-    $route (newVal) {
-      const path = this.$route.path
+    const userDropDown = (command) => {
+      if (command === 'logout') {
+        logout()
+      }
+    }
+    onMounted(() => {
+      const path = router.currentRoute.value.path
       const activeName = (path === '/') ? '/index' : path
-      this.changeHeaderBarCurrentMenu(activeName)
+      changeHeaderBarCurrentMenu(activeName)
+    })
+    watch(router.currentRoute, (newVal) => {
+      const path = router.currentRoute.value.path
+      const activeName = (path === '/') ? '/index' : path
+      changeHeaderBarCurrentMenu(activeName)
+    })
+    return {
+      ...toRefs(state),
+      activeName,
+      userInfo,
+      isAdmin,
+      tabList,
+      changeHeaderBarCurrentMenu,
+      handleClick,
+      userDropDown,
+      logout
     }
   },
   components: {

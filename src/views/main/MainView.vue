@@ -20,43 +20,42 @@
 
 // ES6语法，相当于
 // new Vue({})
+import { useStore } from 'vuex'
+import { reactive, toRefs, onMounted, getCurrentInstance } from 'vue'
 import HeaderBar from '@/components/bar/headerBar/HeaderBar.vue'
 export default {
   name: 'mainView',
-  data () {
-    const item = {
-      date: '2016-05-02',
-      name: '王小虎',
-      address: '上海市普陀区金沙江路 1518 弄'
-    }
-    return {
-      tableData: Array(20).fill(item),
-      msg: 'Type name and mark who is student',
+  setup () {
+    const { proxy } = getCurrentInstance()
+    const store = useStore()
+    const state = reactive({
       mainPath: 'index',
       path: window.location.pathname
+    })
+    const loginStatus = () => {
+      store.dispatch('setUserInfo')
+    }
+    const getPageAcceessList = () => {
+      store.dispatch('getPageAcceessList')
+    }
+    onMounted(() => {
+      console.log(proxy.$eventbus)
+      proxy.$eventbus.$on('docChangeTo', function (e) {
+        state.mainPath = '1000'
+      })
+      proxy.$eventbus.$on('gotoIndex', function (e) {
+        state.mainPath = 'index'
+      })
+    })
+    return {
+      ...toRefs(state),
+      loginStatus,
+      getPageAcceessList
     }
   },
   components: {
     // // 在#app元素内，注册组件
     'header-bar': HeaderBar
-  },
-  mounted () {
-    const app = this
-    console.log('mainview', this)
-    this.$eventbus.$on('docChangeTo', function (e) {
-      app.mainPath = '1000'
-    })
-    this.$eventbus.$on('gotoIndex', function (e) {
-      app.mainPath = 'index'
-    })
-  },
-  methods: {
-    loginStatus () {
-      this.$store.dispatch('setUserInfo')
-    },
-    getPageAcceessList () {
-      this.$store.dispatch('getPageAcceessList')
-    }
   }
 }
 </script>

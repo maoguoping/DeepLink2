@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import { reactive, toRefs, watch, ref, nextTick } from 'vue'
 export default {
   name: 'EditText',
   props: {
@@ -20,29 +21,33 @@ export default {
       default: ''
     }
   },
-  data () {
-    return {
+  setup (props, { emit }) {
+    const { value } = toRefs(props)
+    const state = reactive({
       status: 0,
-      textVal: this.value
+      textVal: value.value
+    })
+    const inputBox = ref(null)
+    const textFun = () => {
+      state.status = 0
     }
-  },
-  methods: {
-    editFun () {
-      this.status = 1
-      this.$nextTick(() => {
-        this.$refs.inputBox.focus()
+    const editFun = () => {
+      state.status = 1
+      nextTick(() => {
+        inputBox.value.focus()
       })
-    },
-    textFun () {
-      this.status = 0
     }
-  },
-  watch: {
-    value (newVal) {
-      this.textVal = newVal
-    },
-    textVal (newVal) {
-      this.$emit('update:value', newVal)
+    watch(value, newVal => {
+      state.textVal = newVal
+    })
+    watch(state.textVal, newVal => {
+      emit('update:value', newVal)
+    })
+    return {
+      ...toRefs(state),
+      inputBox,
+      editFun,
+      textFun
     }
   }
 }

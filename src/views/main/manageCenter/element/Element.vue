@@ -45,24 +45,22 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { useStore } from 'vuex'
+import { reactive, toRefs, computed } from 'vue'
 import SetElementInfoDialog from '../components/dialog/setElementInfoDialog'
 export default {
   name: 'Element',
-  data () {
-    return {
+  setup () {
+    const store = useStore()
+    const state = reactive({
       dynamicTags: ['标签一', '标签二', '标签三'],
       inputVisible: false,
       inputValue: '',
       showSetElementInfoDialog: false
-    }
-  },
-  computed: {
-    ...mapState({
-      manageCenterInfo: state => state.manageCenterStore.manageCenterInfo
-    }),
-    listInfo () {
-      return this.manageCenterInfo || {
+    })
+    const manageCenterInfo = computed(() => store.state.manageCenterStore.manageCenterInfo)
+    const listInfo = computed(() => {
+      return manageCenterInfo.value || {
         name: '',
         description: '',
         id: '',
@@ -80,15 +78,15 @@ export default {
         modifyDate: '',
         children: []
       }
+    })
+    const handleEditInfo = () => {
+      state.showSetElementInfoDialog = true
     }
-  },
-  methods: {
-    /**
-       * 编辑按钮回调
-       * @return {void}
-       */
-    handleEditInfo () {
-      this.showSetElementInfoDialog = true
+    return {
+      ...toRefs(state),
+      manageCenterInfo,
+      listInfo,
+      handleEditInfo
     }
   },
   components: {

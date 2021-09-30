@@ -46,6 +46,7 @@ export const useDetailModal = function (initType) {
     show.value = true
   }
   const openInfoModal = (openType) => (openInfo) => {
+    console.log('点击编辑', openType, openInfo)
     if (openInfo !== undefined) {
       info.value = openInfo
     }

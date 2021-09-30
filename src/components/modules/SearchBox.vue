@@ -18,31 +18,27 @@
   </div>
 </template>
 <script>
+import { reactive, toRefs, getCurrentInstance, onMounted, nextTick } from 'vue'
 export default {
   name: 'SearchBox',
-  data () {
-    return {
+  setup () {
+    const { ctx } = getCurrentInstance()
+    const state = reactive({
       showMore: false,
       showFolder: false
-    }
-  },
-  methods: {
-    switchMore () {
-      this.showMore = !this.showMore
-      this.init()
-    },
-    init () {
-      const items = this.$el.querySelectorAll('.search-box-item')
+    })
+    const init = () => {
+      const items = ctx.$el.querySelectorAll('.search-box-item')
       const num = items.length
-      const boxWidth = this.$el.querySelector('.main').offsetWidth
-      const itemWidth = this.$el.querySelector('.search-box-item').offsetWidth
+      const boxWidth = ctx.$el.querySelector('.main').offsetWidth
+      const itemWidth = ctx.$el.querySelector('.search-box-item').offsetWidth
       const maxNum = (itemWidth === 0) ? 0 : Math.floor(boxWidth / itemWidth) + 1
       if (num <= maxNum) {
-        this.showFolder = false
+        state.showFolder = false
       } else {
-        this.showFolder = true
+        state.showFolder = true
       }
-      if (this.showMore || num <= maxNum) {
+      if (state.showMore || num <= maxNum) {
         for (let i = maxNum - 1; i < num - 1; i++) {
           items[i].style.display = 'inline-block'
         }
@@ -52,11 +48,20 @@ export default {
         }
       }
     }
-  },
-  mounted () {
-    this.$nextTick(() => {
-      this.init()
+    const switchMore = () => {
+      state.showMore = !state.showMore
+      init()
+    }
+    onMounted(() => {
+      nextTick(() => {
+        init()
+      })
     })
+    return {
+      ...toRefs(state),
+      init,
+      switchMore
+    }
   }
 }
 </script>
